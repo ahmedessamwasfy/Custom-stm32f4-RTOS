@@ -119,4 +119,4 @@ _Figure 2. Quantum cycle ._
 ## Arabic
 
 - <a href="https://www.youtube.com/playlist?list=PLPW8O6W-1chx8Y7Oq2gOE0NUPXmQxu2Wr">Event-Driven Programming Quantum Leaps</a> YouTube playlist
-- <a href="https://www.youtube.com/playlist?list=PLPFp2zIiTnxVI2NdZ_yl5k2ilNCZEqOfB"> RTOS by ahmed el deeb </a> YouTube playlist
+- <a href="https://www.youtube.com/playlist?list=PLPFp2zIiTnxVI2NdZ_yl5k2ilNCZEqOfB"> RTOS by Eng Ahmed Eldeeb </a> YouTube playlist
