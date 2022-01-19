@@ -1,0 +1,10 @@
+core_cm4.h:1657:22:__NVIC_SetPriorityGrouping	24	static
+core_cm4.h:1688:22:__NVIC_EnableIRQ	16	static
+core_cm4.h:1816:22:__NVIC_SetPriority	16	static
+core_cm4.h:2022:26:SysTick_Config	16	static
+Rtos.c:103:13:idleThreadFunction	4	static
+Rtos.c:121:6:RTOS_init	16	static,ignoring_inline_asm
+Rtos.c:170:6:RTOS_SVC_Handler_main	24	static
+Rtos.c:326:6:RTOS_schedulerStart	24	static,ignoring_inline_asm
+Rtos.c:384:10:RTOS_isSchedulerRunning	4	static
+Rtos.c:394:6:RTOS_SysTick_Handler	8	static

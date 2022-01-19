@@ -1,0 +1,6 @@
+CAN.c:115:6:CAN1_Init	16	static
+CAN.c:254:6:CAN1_Transmit_Red1	4	static
+CAN.c:278:6:CAN1_Transmit_Red2	4	static
+CAN.c:301:6:CAN1_Transmit_Green1	4	static
+CAN.c:323:6:CAN1_Transmit_Green2	4	static
+CAN.c:347:6:CAN1_Receive	16	static

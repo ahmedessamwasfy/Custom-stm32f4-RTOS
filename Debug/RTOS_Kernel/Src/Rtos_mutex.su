@@ -1,0 +1,3 @@
+Rtos_mutex.c:99:6:RTOS_mutexCreate	16	static
+Rtos_mutex.c:126:15:RTOS_mutexLock	48	static,ignoring_inline_asm
+Rtos_mutex.c:228:6:RTOS_mutexRelease	24	static,ignoring_inline_asm

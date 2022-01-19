@@ -1,0 +1,4 @@
+core_cm4.h:2064:26:ITM_SendChar	16	static,ignoring_inline_asm
+itm.c:116:6:ITM_Printf	16	static
+itm.c:139:6:ITM_SendChar_Port	16	static
+itm.c:155:6:ITM_Printf_Port	16	static

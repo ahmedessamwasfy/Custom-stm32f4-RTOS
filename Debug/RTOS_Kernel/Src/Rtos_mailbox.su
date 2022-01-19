@@ -1,0 +1,5 @@
+Rtos_mailbox.c:94:13:checkWaitingThreads	24	static
+Rtos_mailbox.c:134:13:blockCurrentThread	24	static
+Rtos_mailbox.c:170:6:RTOS_mailboxCreate	24	static
+Rtos_mailbox.c:208:15:RTOS_mailboxWrite	32	static
+Rtos_mailbox.c:280:15:RTOS_mailboxRead	32	static

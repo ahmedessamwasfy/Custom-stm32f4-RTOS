@@ -1,0 +1,5111 @@
+
+Custom_RTOS.elf:     file format elf32-littlearm
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .isr_vector   000001ac  08000000  08000000  00010000  2**0
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  1 .text         00001960  080001ac  080001ac  000101ac  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  2 .rodata       000000ec  08001b0c  08001b0c  00011b0c  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  3 .ARM.extab    00000000  08001bf8  08001bf8  00020004  2**0
+                  CONTENTS
+  4 .ARM          00000000  08001bf8  08001bf8  00020004  2**0
+                  CONTENTS
+  5 .preinit_array 00000000  08001bf8  08001bf8  00020004  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  6 .init_array   00000004  08001bf8  08001bf8  00011bf8  2**2
+                  CONTENTS, ALLOC, LOAD, DATA
+  7 .fini_array   00000004  08001bfc  08001bfc  00011bfc  2**2
+                  CONTENTS, ALLOC, LOAD, DATA
+  8 .data         00000004  20000000  08001c00  00020000  2**2
+                  CONTENTS, ALLOC, LOAD, DATA
+  9 .ccmram       00000000  10000000  10000000  00020004  2**0
+                  CONTENTS
+ 10 .bss          0000a388  20000008  20000008  00020008  2**3
+                  ALLOC
+ 11 ._user_heap_stack 00000600  2000a390  2000a390  00020008  2**0
+                  ALLOC
+ 12 .ARM.attributes 00000030  00000000  00000000  00020004  2**0
+                  CONTENTS, READONLY
+ 13 .debug_info   000091e7  00000000  00000000  00020034  2**0
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+ 14 .debug_abbrev 00001a73  00000000  00000000  0002921b  2**0
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+ 15 .debug_aranges 000003a0  00000000  00000000  0002ac90  2**3
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+ 16 .debug_ranges 00000298  00000000  00000000  0002b030  2**3
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+ 17 .debug_macro  0002262d  00000000  00000000  0002b2c8  2**0
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+ 18 .debug_line   00006f71  00000000  00000000  0004d8f5  2**0
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+ 19 .debug_str    000cdf3f  00000000  00000000  00054866  2**0
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+ 20 .comment      00000053  00000000  00000000  001227a5  2**0
+                  CONTENTS, READONLY
+ 21 .debug_frame  000009e8  00000000  00000000  001227f8  2**2
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+
+Disassembly of section .text:
+
+080001ac <__do_global_dtors_aux>:
+ 80001ac:	b510      	push	{r4, lr}
+ 80001ae:	4c05      	ldr	r4, [pc, #20]	; (80001c4 <__do_global_dtors_aux+0x18>)
+ 80001b0:	7823      	ldrb	r3, [r4, #0]
+ 80001b2:	b933      	cbnz	r3, 80001c2 <__do_global_dtors_aux+0x16>
+ 80001b4:	4b04      	ldr	r3, [pc, #16]	; (80001c8 <__do_global_dtors_aux+0x1c>)
+ 80001b6:	b113      	cbz	r3, 80001be <__do_global_dtors_aux+0x12>
+ 80001b8:	4804      	ldr	r0, [pc, #16]	; (80001cc <__do_global_dtors_aux+0x20>)
+ 80001ba:	f3af 8000 	nop.w
+ 80001be:	2301      	movs	r3, #1
+ 80001c0:	7023      	strb	r3, [r4, #0]
+ 80001c2:	bd10      	pop	{r4, pc}
+ 80001c4:	20000008 	.word	0x20000008
+ 80001c8:	00000000 	.word	0x00000000
+ 80001cc:	08001af4 	.word	0x08001af4
+
+080001d0 <frame_dummy>:
+ 80001d0:	b508      	push	{r3, lr}
+ 80001d2:	4b03      	ldr	r3, [pc, #12]	; (80001e0 <frame_dummy+0x10>)
+ 80001d4:	b11b      	cbz	r3, 80001de <frame_dummy+0xe>
+ 80001d6:	4903      	ldr	r1, [pc, #12]	; (80001e4 <frame_dummy+0x14>)
+ 80001d8:	4803      	ldr	r0, [pc, #12]	; (80001e8 <frame_dummy+0x18>)
+ 80001da:	f3af 8000 	nop.w
+ 80001de:	bd08      	pop	{r3, pc}
+ 80001e0:	00000000 	.word	0x00000000
+ 80001e4:	2000000c 	.word	0x2000000c
+ 80001e8:	08001af4 	.word	0x08001af4
+
+080001ec <RTOS_SVC_Handler>:
+
+.text
+
+.type RTOS_SVC_Handler, %function
+RTOS_SVC_Handler:
+    tst lr, #4                /* Test bit 2 of the link register to find current stack */
+ 80001ec:	f01e 0f04 	tst.w	lr, #4
+    						  /* Anding 4(0100) with the link register knowing that it contains now the EXC_RETURN of the previous
+    						     So in last  byte if it uses MSP it would be 9(1001) else if it uses PSP it is D(1101) so
+    						     The test is true and zero flag unset if it is PSP , test is false and zero flag set if it's MSP */
+    ite eq                    /* eq when zero flag is set */
+ 80001f0:	bf0c      	ite	eq
+    						  /* means if its MSP then test will set zero flag then eq flag is set,
+    						  	  else if its PSP then test won't set zero flag then eq flag is unset */
+    mrseq r0, msp             /* msp when bit 2 is cleared */
+ 80001f2:	f3ef 8008 	mrseq	r0, MSP
+    						  /* if eq flag is set then its MSP */
+    mrsne r0, psp             /* msp when bit 2 is set */
+ 80001f6:	f3ef 8009 	mrsne	r0, PSP
+    						  /* if eq flag is unset then its PSP */
+    ldr r1,=svcEXEReturn      /* Load the address of svcEXEReturn in r1 */
+ 80001fa:	491a      	ldr	r1, [pc, #104]	; (8000264 <RTOS_PendSV_Handler+0x58>)
+    str lr,[r1]               /* Store lr in svcEXEReturn */
+ 80001fc:	f8c1 e000 	str.w	lr, [r1]
+    						  /* in previous 2 steps we load address of EXC_return and put it in r1
+    						  	 then put the value of link register (which already carry the EXC_RETURN of the function before the exception) inside EXC_RETURN*/
+    bl RTOS_SVC_Handler_main  /* Run C part of SVC Handler */
+ 8000200:	f000 fc7c 	bl	8000afc <RTOS_SVC_Handler_main>
+
+    ldr r1,=svcEXEReturn      /* Load the address of svcEXEReturn in r1 */
+ 8000204:	4917      	ldr	r1, [pc, #92]	; (8000264 <RTOS_PendSV_Handler+0x58>)
+    ldr lr,[r1]               /* Load lr with updated svcEXEReturn value */
+ 8000206:	f8d1 e000 	ldr.w	lr, [r1]
+    						  /* this sequence to return the link register value that we saved in EXC_RETURN to exit the exception normally */
+    bx lr                     /* Return */
+ 800020a:	4770      	bx	lr
+
+0800020c <RTOS_PendSV_Handler>:
+.type RTOS_PendSV_Handler, %function
+RTOS_PendSV_Handler:
+    /* ******************** */
+    /* Save current context */
+    /* ******************** */
+    mrs r1, psp               /* Store psp in r1 */
+ 800020c:	f3ef 8109 	mrs	r1, PSP
+    tst lr, #0x10             /* Test bit 4. if zero, need to stack floating point regs */
+ 8000210:	f01e 0f10 	tst.w	lr, #16
+    it eq                     /* eq means zero flag is set */
+ 8000214:	bf08      	it	eq
+    vstmdbeq r1!, {s16-s31}   /* save floating point registers */
+ 8000216:	ed21 8a10 	vstmdbeq	r1!, {s16-s31}
+    mov r2, lr                /* Store lr in r2 */
+ 800021a:	4672      	mov	r2, lr
+    mrs r3, control           /* Store control in r3 */
+ 800021c:	f3ef 8314 	mrs	r3, CONTROL
+    stmdb r1!,{r2-r11}        /* Store multiple registers (r2 to r11).
+ 8000220:	e921 0ffc 	stmdb	r1!, {r2, r3, r4, r5, r6, r7, r8, r9, sl, fp}
+                                 Decrement address before each access. ! for write back */
+                              /* Note we already saved the r2 and r3 automatically but now we just mocking
+                               * the r2 and r3 to save the exceptionReturn and control register */
+    bl RTOS_threadGetRunning  /* Get current running thread location */
+ 8000224:	f001 fac8 	bl	80017b8 <RTOS_threadGetRunning>
+    str r1,[r0]               /* Store the stack pointer for the current thread  */
+ 8000228:	6001      	str	r1, [r0, #0]
+    						   * and the first element in this struct of the thread is the stack pointer
+    						   * So we update the stack pointer to the new one after we saved context */
+    /* ******************** */
+    /* Load next context    */
+    /* ******************** */
+    mov r0, #1                   /* Put 1 in r0 */
+ 800022a:	f04f 0001 	mov.w	r0, #1
+    msr basepri, r0              /* Disable interrupts with priority 1 and greater */
+ 800022e:	f380 8811 	msr	BASEPRI, r0
+    bl RTOS_threadSwitchRunning  /* Change current running thread */
+ 8000232:	f001 fa6b 	bl	800170c <RTOS_threadSwitchRunning>
+    mov r0, #0                   /* Put 0 in r0 */
+ 8000236:	f04f 0000 	mov.w	r0, #0
+    msr basepri, r0              /* Enable interrupts */
+ 800023a:	f380 8811 	msr	BASEPRI, r0
+    bl RTOS_threadGetRunning     /* Get current running thread location */
+ 800023e:	f001 fabb 	bl	80017b8 <RTOS_threadGetRunning>
+    ldr r1,[r0]                  /* Get its value which is the stack pointer */
+ 8000242:	6801      	ldr	r1, [r0, #0]
+    ldmia r1!,{r2-r11}           /* Load multiple registers (r2 to r11).
+ 8000244:	e8b1 0ffc 	ldmia.w	r1!, {r2, r3, r4, r5, r6, r7, r8, r9, sl, fp}
+                                    Increment address after each access. ! for write back */
+    mov lr, r2                   /* Load lr with value from r2 */
+ 8000248:	4696      	mov	lr, r2
+    msr control, r3              /* Load control with value from r3 */
+ 800024a:	f383 8814 	msr	CONTROL, r3
+    isb                          /* Instruction Synchronization Barrier, recommended after control change */
+ 800024e:	f3bf 8f6f 	isb	sy
+    tst lr, #0x10                /* Test bit 4. If zero, need to unstack floating point regs */
+ 8000252:	f01e 0f10 	tst.w	lr, #16
+    it eq                        /* eq means zero flag is set */
+ 8000256:	bf08      	it	eq
+    vldmiaeq r1!, {s16-s31}      /* Load floating point registers */
+ 8000258:	ecb1 8a10 	vldmiaeq	r1!, {s16-s31}
+    msr psp, r1                  /* set psp to the stack pointer of the new current task */
+ 800025c:	f381 8809 	msr	PSP, r1
+    bx lr                        /* Return */
+ 8000260:	4770      	bx	lr
+ 8000262:	0000      	.short	0x0000
+    ldr r1,=svcEXEReturn      /* Load the address of svcEXEReturn in r1 */
+ 8000264:	2000a38c 	.word	0x2000a38c
+
+08000268 <RTOS_SVC_schedulerStart>:
+.text
+
+/* define RTOS_SVC_schedulerStart as a function  */
+.type RTOS_SVC_schedulerStart, %function
+RTOS_SVC_schedulerStart:
+    svc 0   				/* trigger Supervisor call and pass 0 for it */
+ 8000268:	df00      	svc	0
+    /* between these two instruction  the procesor went to the svc INTERRUPT handler */
+    /* take the Special registers and put them into the stack along with the SVC parameter*/
+    bx lr					/* link register carry the program counter of the next instruction after returning from the function so here we jump back from
+ 800026a:	4770      	bx	lr
+
+0800026c <RTOS_SVC_threadCreate>:
+    							from this function  */
+
+.type RTOS_SVC_threadCreate, %function
+RTOS_SVC_threadCreate:
+    svc 1
+ 800026c:	df01      	svc	1
+    bx lr
+ 800026e:	4770      	bx	lr
+
+08000270 <RTOS_SVC_mutexCreate>:
+
+.type RTOS_SVC_mutexCreate, %function
+RTOS_SVC_mutexCreate:
+    svc 2
+ 8000270:	df02      	svc	2
+    bx lr
+ 8000272:	4770      	bx	lr
+
+08000274 <RTOS_SVC_mutexLock>:
+
+.type RTOS_SVC_mutexLock, %function
+RTOS_SVC_mutexLock:
+    svc 3
+ 8000274:	df03      	svc	3
+    bx lr
+ 8000276:	4770      	bx	lr
+
+08000278 <RTOS_SVC_mutexRelease>:
+
+.type RTOS_SVC_mutexRelease, %function
+RTOS_SVC_mutexRelease:
+    svc 4
+ 8000278:	df04      	svc	4
+    bx lr
+ 800027a:	4770      	bx	lr
+
+0800027c <RTOS_SVC_semaphoreCreate>:
+
+.type RTOS_SVC_semaphoreCreate, %function
+RTOS_SVC_semaphoreCreate:
+    svc 5
+ 800027c:	df05      	svc	5
+    bx lr
+ 800027e:	4770      	bx	lr
+
+08000280 <RTOS_SVC_semaphoreTake>:
+
+.type RTOS_SVC_semaphoreTake, %function
+RTOS_SVC_semaphoreTake:
+    svc 6
+ 8000280:	df06      	svc	6
+    bx lr
+ 8000282:	4770      	bx	lr
+
+08000284 <RTOS_SVC_semaphoreGive>:
+
+.type RTOS_SVC_semaphoreGive, %function
+RTOS_SVC_semaphoreGive:
+    svc 7
+ 8000284:	df07      	svc	7
+    bx lr
+ 8000286:	4770      	bx	lr
+
+08000288 <RTOS_SVC_mailboxCreate>:
+
+.type RTOS_SVC_mailboxCreate, %function
+RTOS_SVC_mailboxCreate:
+    svc 8
+ 8000288:	df08      	svc	8
+    bx lr
+ 800028a:	4770      	bx	lr
+
+0800028c <RTOS_SVC_mailboxWrite>:
+
+.type RTOS_SVC_mailboxWrite, %function
+RTOS_SVC_mailboxWrite:
+    svc 9
+ 800028c:	df09      	svc	9
+    bx lr
+ 800028e:	4770      	bx	lr
+
+08000290 <RTOS_SVC_mailboxRead>:
+
+.type RTOS_SVC_mailboxRead, %function
+RTOS_SVC_mailboxRead:
+    svc 10
+ 8000290:	df0a      	svc	10
+    bx lr
+ 8000292:	4770      	bx	lr
+
+08000294 <RTOS_SVC_threadDelay>:
+
+.type RTOS_SVC_threadDelay, %function
+RTOS_SVC_threadDelay:
+	svc 11
+ 8000294:	df0b      	svc	11
+	bx lr
+ 8000296:	4770      	bx	lr
+
+08000298 <RTOS_SVC_threadDestroy>:
+
+.type RTOS_SVC_threadDestroy, %function
+RTOS_SVC_threadDestroy:
+	svc 12
+ 8000298:	df0c      	svc	12
+	bx lr
+ 800029a:	4770      	bx	lr
+
+0800029c <RTOS_SVC_threadPrioritySet>:
+
+.type RTOS_SVC_threadPrioritySet, %function
+RTOS_SVC_threadPrioritySet:
+    svc 13
+ 800029c:	df0d      	svc	13
+    bx lr
+ 800029e:	4770      	bx	lr
+
+080002a0 <CAN1_Init>:
+ * brief
+ * note
+ * param   void
+ * retval  void
+ */
+void CAN1_Init(void){
+ 80002a0:	b480      	push	{r7}
+ 80002a2:	b083      	sub	sp, #12
+ 80002a4:	af00      	add	r7, sp, #0
+	/* RCC of Can enable */
+	/* gpio pins of can enable */
+	volatile int x=0x9999;
+ 80002a6:	f649 1399 	movw	r3, #39321	; 0x9999
+ 80002aa:	607b      	str	r3, [r7, #4]
+	  /* Configure GPIO with AF9, CAN1 connected to APB1 with 45MHz clock
+	   * CAN1_RX  -> PA11 (IN)
+	   * CAN1_TX  -> PA12 (OUT)
+	   * ***********************/
+	  /* Enable port A clock */
+	  RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+ 80002ac:	4b70      	ldr	r3, [pc, #448]	; (8000470 <CAN1_Init+0x1d0>)
+ 80002ae:	6b1b      	ldr	r3, [r3, #48]	; 0x30
+ 80002b0:	4a6f      	ldr	r2, [pc, #444]	; (8000470 <CAN1_Init+0x1d0>)
+ 80002b2:	f043 0301 	orr.w	r3, r3, #1
+ 80002b6:	6313      	str	r3, [r2, #48]	; 0x30
+
+	  /* Select alternate function mode */
+	  GPIOA->MODER &= ~(GPIO_MODER_MODER11 | GPIO_MODER_MODER12);
+ 80002b8:	4b6e      	ldr	r3, [pc, #440]	; (8000474 <CAN1_Init+0x1d4>)
+ 80002ba:	681b      	ldr	r3, [r3, #0]
+ 80002bc:	4a6d      	ldr	r2, [pc, #436]	; (8000474 <CAN1_Init+0x1d4>)
+ 80002be:	f023 7370 	bic.w	r3, r3, #62914560	; 0x3c00000
+ 80002c2:	6013      	str	r3, [r2, #0]
+	  GPIOA->MODER |= (GPIO_MODER_MODER11_1 | GPIO_MODER_MODER12_1);
+ 80002c4:	4b6b      	ldr	r3, [pc, #428]	; (8000474 <CAN1_Init+0x1d4>)
+ 80002c6:	681b      	ldr	r3, [r3, #0]
+ 80002c8:	4a6a      	ldr	r2, [pc, #424]	; (8000474 <CAN1_Init+0x1d4>)
+ 80002ca:	f043 7320 	orr.w	r3, r3, #41943040	; 0x2800000
+ 80002ce:	6013      	str	r3, [r2, #0]
+
+	  /* Select output speed medium */
+	  GPIOA->OSPEEDR &= ~(GPIO_OSPEEDER_OSPEEDR12);
+ 80002d0:	4b68      	ldr	r3, [pc, #416]	; (8000474 <CAN1_Init+0x1d4>)
+ 80002d2:	689b      	ldr	r3, [r3, #8]
+ 80002d4:	4a67      	ldr	r2, [pc, #412]	; (8000474 <CAN1_Init+0x1d4>)
+ 80002d6:	f023 7340 	bic.w	r3, r3, #50331648	; 0x3000000
+ 80002da:	6093      	str	r3, [r2, #8]
+	  GPIOA->OSPEEDR |= (GPIO_OSPEEDER_OSPEEDR12_0);
+ 80002dc:	4b65      	ldr	r3, [pc, #404]	; (8000474 <CAN1_Init+0x1d4>)
+ 80002de:	689b      	ldr	r3, [r3, #8]
+ 80002e0:	4a64      	ldr	r2, [pc, #400]	; (8000474 <CAN1_Init+0x1d4>)
+ 80002e2:	f043 7380 	orr.w	r3, r3, #16777216	; 0x1000000
+ 80002e6:	6093      	str	r3, [r2, #8]
+
+	  /* Select AF9 */
+	  GPIOA->AFR[1] &= ~(GPIO_AFRH_AFRH11 | GPIO_AFRH_AFRH12);
+ 80002e8:	4b62      	ldr	r3, [pc, #392]	; (8000474 <CAN1_Init+0x1d4>)
+ 80002ea:	6a5b      	ldr	r3, [r3, #36]	; 0x24
+ 80002ec:	4a61      	ldr	r2, [pc, #388]	; (8000474 <CAN1_Init+0x1d4>)
+ 80002ee:	f423 237f 	bic.w	r3, r3, #1044480	; 0xff000
+ 80002f2:	6253      	str	r3, [r2, #36]	; 0x24
+	  GPIOA->AFR[1] |= (GPIO_AFRH_AFRH11_AF9 | GPIO_AFRH_AFRH12_AF9);
+ 80002f4:	4b5f      	ldr	r3, [pc, #380]	; (8000474 <CAN1_Init+0x1d4>)
+ 80002f6:	6a5b      	ldr	r3, [r3, #36]	; 0x24
+ 80002f8:	4a5e      	ldr	r2, [pc, #376]	; (8000474 <CAN1_Init+0x1d4>)
+ 80002fa:	f443 2319 	orr.w	r3, r3, #626688	; 0x99000
+ 80002fe:	6253      	str	r3, [r2, #36]	; 0x24
+
+	  /* Configure CAN1 */
+	  /* Enable CAN1 clock */
+	  RCC->APB1ENR = RCC_APB1ENR_CAN1EN;
+ 8000300:	4b5b      	ldr	r3, [pc, #364]	; (8000470 <CAN1_Init+0x1d0>)
+ 8000302:	f04f 7200 	mov.w	r2, #33554432	; 0x2000000
+ 8000306:	641a      	str	r2, [r3, #64]	; 0x40
+	     * Automatic retransmission.
+	     * Receive FIFO not locked on overrun.
+	     * */
+
+	  /* Set automatic bus-off management */
+	  CAN1->MCR |= CAN_MCR_ABOM;
+ 8000308:	4b5b      	ldr	r3, [pc, #364]	; (8000478 <CAN1_Init+0x1d8>)
+ 800030a:	681b      	ldr	r3, [r3, #0]
+ 800030c:	4a5a      	ldr	r2, [pc, #360]	; (8000478 <CAN1_Init+0x1d8>)
+ 800030e:	f043 0340 	orr.w	r3, r3, #64	; 0x40
+ 8000312:	6013      	str	r3, [r2, #0]
+
+	  /* Set transmit FIFO priority driven by the request order */
+	  CAN1->MCR |= CAN_MCR_TXFP;
+ 8000314:	4b58      	ldr	r3, [pc, #352]	; (8000478 <CAN1_Init+0x1d8>)
+ 8000316:	681b      	ldr	r3, [r3, #0]
+ 8000318:	4a57      	ldr	r2, [pc, #348]	; (8000478 <CAN1_Init+0x1d8>)
+ 800031a:	f043 0304 	orr.w	r3, r3, #4
+ 800031e:	6013      	str	r3, [r2, #0]
+
+	  /* Initialization request */
+	  CAN1->MCR |= CAN_MCR_INRQ;
+ 8000320:	4b55      	ldr	r3, [pc, #340]	; (8000478 <CAN1_Init+0x1d8>)
+ 8000322:	681b      	ldr	r3, [r3, #0]
+ 8000324:	4a54      	ldr	r2, [pc, #336]	; (8000478 <CAN1_Init+0x1d8>)
+ 8000326:	f043 0301 	orr.w	r3, r3, #1
+ 800032a:	6013      	str	r3, [r2, #0]
+
+	  /* Request to exit Sleep mode */
+	  CAN1->MCR &= ~CAN_MCR_SLEEP;
+ 800032c:	4b52      	ldr	r3, [pc, #328]	; (8000478 <CAN1_Init+0x1d8>)
+ 800032e:	681b      	ldr	r3, [r3, #0]
+ 8000330:	4a51      	ldr	r2, [pc, #324]	; (8000478 <CAN1_Init+0x1d8>)
+ 8000332:	f023 0302 	bic.w	r3, r3, #2
+ 8000336:	6013      	str	r3, [r2, #0]
+
+
+	  /* Wait for initialization mode */
+	  while((CAN_MSR_SLAK == (CAN_MSR_SLAK & CAN1->MSR))
+ 8000338:	bf00      	nop
+ 800033a:	4b4f      	ldr	r3, [pc, #316]	; (8000478 <CAN1_Init+0x1d8>)
+ 800033c:	685b      	ldr	r3, [r3, #4]
+ 800033e:	f003 0302 	and.w	r3, r3, #2
+ 8000342:	2b02      	cmp	r3, #2
+ 8000344:	d0f9      	beq.n	800033a <CAN1_Init+0x9a>
+	      || (CAN_MSR_INAK != (CAN_MSR_INAK & CAN1->MSR)))
+ 8000346:	4b4c      	ldr	r3, [pc, #304]	; (8000478 <CAN1_Init+0x1d8>)
+ 8000348:	685b      	ldr	r3, [r3, #4]
+ 800034a:	f003 0301 	and.w	r3, r3, #1
+ 800034e:	2b01      	cmp	r3, #1
+ 8000350:	d1f3      	bne.n	800033a <CAN1_Init+0x9a>
+	     * tBS1 = tq x (TS1[3:0] + 1) = 0.111 * 7 = 0.777 us
+	     * tBS2 = tq x (TS2[2:0] + 1) = 0.111 * 1 = 0.111 us
+	     * NominalBitTime = 1 × tq + tBS1 + tBS2 = 0.111 + 0.777 + 0.111 = 0,9999 (1) us
+	     * BaudRate = 1 / NominalBitTime = 1 MBits/s */
+
+	  CAN1->BTR = 0x00060004;
+ 8000352:	4b49      	ldr	r3, [pc, #292]	; (8000478 <CAN1_Init+0x1d8>)
+ 8000354:	4a49      	ldr	r2, [pc, #292]	; (800047c <CAN1_Init+0x1dc>)
+ 8000356:	61da      	str	r2, [r3, #28]
+	  /* Activate silent mode for debugging and example */
+	  CAN1->BTR |= CAN_BTR_LBKM;
+ 8000358:	4b47      	ldr	r3, [pc, #284]	; (8000478 <CAN1_Init+0x1d8>)
+ 800035a:	69db      	ldr	r3, [r3, #28]
+ 800035c:	4a46      	ldr	r2, [pc, #280]	; (8000478 <CAN1_Init+0x1d8>)
+ 800035e:	f043 4380 	orr.w	r3, r3, #1073741824	; 0x40000000
+ 8000362:	61d3      	str	r3, [r2, #28]
+	  CAN1->BTR |= CAN_BTR_SILM;
+ 8000364:	4b44      	ldr	r3, [pc, #272]	; (8000478 <CAN1_Init+0x1d8>)
+ 8000366:	69db      	ldr	r3, [r3, #28]
+ 8000368:	4a43      	ldr	r2, [pc, #268]	; (8000478 <CAN1_Init+0x1d8>)
+ 800036a:	f043 4300 	orr.w	r3, r3, #2147483648	; 0x80000000
+ 800036e:	61d3      	str	r3, [r2, #28]
+
+	  	  /* Transmit config */
+	  /* Reset identifier register, no extension, no remote */
+	  CAN1->sTxMailBox[0].TIR = 0;
+ 8000370:	4b41      	ldr	r3, [pc, #260]	; (8000478 <CAN1_Init+0x1d8>)
+ 8000372:	2200      	movs	r2, #0
+ 8000374:	f8c3 2180 	str.w	r2, [r3, #384]	; 0x180
+
+	  /* Set CAN standard identifier = 0x25 */
+	  CAN1->sTxMailBox[0].TIR |= 0x02500000;
+ 8000378:	4b3f      	ldr	r3, [pc, #252]	; (8000478 <CAN1_Init+0x1d8>)
+ 800037a:	f8d3 3180 	ldr.w	r3, [r3, #384]	; 0x180
+ 800037e:	4a3e      	ldr	r2, [pc, #248]	; (8000478 <CAN1_Init+0x1d8>)
+ 8000380:	f043 7314 	orr.w	r3, r3, #38797312	; 0x2500000
+ 8000384:	f8c2 3180 	str.w	r3, [r2, #384]	; 0x180
+
+	  /* Set CAN frame length to 8 */
+	  CAN1->sTxMailBox[0].TDTR &= ~CAN_TDT0R_DLC;
+ 8000388:	4b3b      	ldr	r3, [pc, #236]	; (8000478 <CAN1_Init+0x1d8>)
+ 800038a:	f8d3 3184 	ldr.w	r3, [r3, #388]	; 0x184
+ 800038e:	4a3a      	ldr	r2, [pc, #232]	; (8000478 <CAN1_Init+0x1d8>)
+ 8000390:	f023 030f 	bic.w	r3, r3, #15
+ 8000394:	f8c2 3184 	str.w	r3, [r2, #388]	; 0x184
+	  CAN1->sTxMailBox[0].TDTR |= 0x00000001;
+ 8000398:	4b37      	ldr	r3, [pc, #220]	; (8000478 <CAN1_Init+0x1d8>)
+ 800039a:	f8d3 3184 	ldr.w	r3, [r3, #388]	; 0x184
+ 800039e:	4a36      	ldr	r2, [pc, #216]	; (8000478 <CAN1_Init+0x1d8>)
+ 80003a0:	f043 0301 	orr.w	r3, r3, #1
+ 80003a4:	f8c2 3184 	str.w	r3, [r2, #388]	; 0x184
+
+	  /* Reset transmit data registers  */
+	  CAN1->sTxMailBox[0].TDLR = 0;
+ 80003a8:	4b33      	ldr	r3, [pc, #204]	; (8000478 <CAN1_Init+0x1d8>)
+ 80003aa:	2200      	movs	r2, #0
+ 80003ac:	f8c3 2188 	str.w	r2, [r3, #392]	; 0x188
+	  CAN1->sTxMailBox[0].TDHR = 0;
+ 80003b0:	4b31      	ldr	r3, [pc, #196]	; (8000478 <CAN1_Init+0x1d8>)
+ 80003b2:	2200      	movs	r2, #0
+ 80003b4:	f8c3 218c 	str.w	r2, [r3, #396]	; 0x18c
+	   *
+	   * After reset filters in init mode and for CAN1
+	   * filter until number 13. Filter scale dual 16-bit */
+
+	  /* Set Filter init mode */
+	  CAN1->FMR |= CAN_FMR_FINIT;
+ 80003b8:	4b2f      	ldr	r3, [pc, #188]	; (8000478 <CAN1_Init+0x1d8>)
+ 80003ba:	f8d3 3200 	ldr.w	r3, [r3, #512]	; 0x200
+ 80003be:	4a2e      	ldr	r2, [pc, #184]	; (8000478 <CAN1_Init+0x1d8>)
+ 80003c0:	f043 0301 	orr.w	r3, r3, #1
+ 80003c4:	f8c2 3200 	str.w	r3, [r2, #512]	; 0x200
+
+	  /* Set filer mode, 1 and 3 list, 2 and 4 mask */
+	  CAN1->FM1R &= ~(CAN_FM1R_FBM2 | CAN_FM1R_FBM4);
+ 80003c8:	4b2b      	ldr	r3, [pc, #172]	; (8000478 <CAN1_Init+0x1d8>)
+ 80003ca:	f8d3 3204 	ldr.w	r3, [r3, #516]	; 0x204
+ 80003ce:	4a2a      	ldr	r2, [pc, #168]	; (8000478 <CAN1_Init+0x1d8>)
+ 80003d0:	f023 0314 	bic.w	r3, r3, #20
+ 80003d4:	f8c2 3204 	str.w	r3, [r2, #516]	; 0x204
+	  CAN1->FM1R |= (CAN_FM1R_FBM1 | CAN_FM1R_FBM3);
+ 80003d8:	4b27      	ldr	r3, [pc, #156]	; (8000478 <CAN1_Init+0x1d8>)
+ 80003da:	f8d3 3204 	ldr.w	r3, [r3, #516]	; 0x204
+ 80003de:	4a26      	ldr	r2, [pc, #152]	; (8000478 <CAN1_Init+0x1d8>)
+ 80003e0:	f043 030a 	orr.w	r3, r3, #10
+ 80003e4:	f8c2 3204 	str.w	r3, [r2, #516]	; 0x204
+
+	  /* Set FIFO 0 for all filters */
+	  CAN1->FFA1R &= ~(CAN_FFA1R_FFA1 | CAN_FFA1R_FFA2
+ 80003e8:	4b23      	ldr	r3, [pc, #140]	; (8000478 <CAN1_Init+0x1d8>)
+ 80003ea:	f8d3 3214 	ldr.w	r3, [r3, #532]	; 0x214
+ 80003ee:	4a22      	ldr	r2, [pc, #136]	; (8000478 <CAN1_Init+0x1d8>)
+ 80003f0:	f023 031e 	bic.w	r3, r3, #30
+ 80003f4:	f8c2 3214 	str.w	r3, [r2, #532]	; 0x214
+	   * */
+
+	  /* Filter 0 Deactivated ID Mask (16-bit) No. 0, 1 */
+
+	  /* Set filter 1, list mode with ID = 0x25 */
+	  CAN1->sFilterRegister[1].FR1 = 0x04A004A0; /* No. 2, 3 */
+ 80003f8:	4b1f      	ldr	r3, [pc, #124]	; (8000478 <CAN1_Init+0x1d8>)
+ 80003fa:	4a21      	ldr	r2, [pc, #132]	; (8000480 <CAN1_Init+0x1e0>)
+ 80003fc:	f8c3 2248 	str.w	r2, [r3, #584]	; 0x248
+	  CAN1->sFilterRegister[1].FR2 = 0x04A004A0; /* No. 4, 5 */
+ 8000400:	4b1d      	ldr	r3, [pc, #116]	; (8000478 <CAN1_Init+0x1d8>)
+ 8000402:	4a1f      	ldr	r2, [pc, #124]	; (8000480 <CAN1_Init+0x1e0>)
+ 8000404:	f8c3 224c 	str.w	r2, [r3, #588]	; 0x24c
+
+	  /* Set filter 2, mask mode with ID = 0x10:0x1F */
+	  CAN1->sFilterRegister[2].FR1 = 0xFE1F0200; /* No. 6 */
+ 8000408:	4b1b      	ldr	r3, [pc, #108]	; (8000478 <CAN1_Init+0x1d8>)
+ 800040a:	4a1e      	ldr	r2, [pc, #120]	; (8000484 <CAN1_Init+0x1e4>)
+ 800040c:	f8c3 2250 	str.w	r2, [r3, #592]	; 0x250
+	  CAN1->sFilterRegister[2].FR2 = 0xFE1F0200; /* No. 7 */
+ 8000410:	4b19      	ldr	r3, [pc, #100]	; (8000478 <CAN1_Init+0x1d8>)
+ 8000412:	4a1c      	ldr	r2, [pc, #112]	; (8000484 <CAN1_Init+0x1e4>)
+ 8000414:	f8c3 2254 	str.w	r2, [r3, #596]	; 0x254
+
+	  /* Set filter 3, list mode with ID = 0x15 */
+	  CAN1->sFilterRegister[3].FR1 = 0x02A002A0; /* No. 8, 9 */
+ 8000418:	4b17      	ldr	r3, [pc, #92]	; (8000478 <CAN1_Init+0x1d8>)
+ 800041a:	4a1b      	ldr	r2, [pc, #108]	; (8000488 <CAN1_Init+0x1e8>)
+ 800041c:	f8c3 2258 	str.w	r2, [r3, #600]	; 0x258
+	  CAN1->sFilterRegister[3].FR2 = 0x02A002A0; /* No. 10, 11 */
+ 8000420:	4b15      	ldr	r3, [pc, #84]	; (8000478 <CAN1_Init+0x1d8>)
+ 8000422:	4a19      	ldr	r2, [pc, #100]	; (8000488 <CAN1_Init+0x1e8>)
+ 8000424:	f8c3 225c 	str.w	r2, [r3, #604]	; 0x25c
+
+	  /* Set filter 4, mask mode with ID = 0x20:0x2F */
+	  CAN1->sFilterRegister[4].FR1 = 0xFE1F0400; /* No. 12 */
+ 8000428:	4b13      	ldr	r3, [pc, #76]	; (8000478 <CAN1_Init+0x1d8>)
+ 800042a:	4a18      	ldr	r2, [pc, #96]	; (800048c <CAN1_Init+0x1ec>)
+ 800042c:	f8c3 2260 	str.w	r2, [r3, #608]	; 0x260
+	  CAN1->sFilterRegister[4].FR2 = 0xFE1F0400; /* No. 13 */
+ 8000430:	4b11      	ldr	r3, [pc, #68]	; (8000478 <CAN1_Init+0x1d8>)
+ 8000432:	4a16      	ldr	r2, [pc, #88]	; (800048c <CAN1_Init+0x1ec>)
+ 8000434:	f8c3 2264 	str.w	r2, [r3, #612]	; 0x264
+
+	  /* Activate filters */
+	  CAN1->FA1R |= (CAN_FA1R_FACT1 | CAN_FA1R_FACT2
+ 8000438:	4b0f      	ldr	r3, [pc, #60]	; (8000478 <CAN1_Init+0x1d8>)
+ 800043a:	f8d3 321c 	ldr.w	r3, [r3, #540]	; 0x21c
+ 800043e:	4a0e      	ldr	r2, [pc, #56]	; (8000478 <CAN1_Init+0x1d8>)
+ 8000440:	f043 031e 	orr.w	r3, r3, #30
+ 8000444:	f8c2 321c 	str.w	r3, [r2, #540]	; 0x21c
+	      | CAN_FA1R_FACT3 | CAN_FA1R_FACT4);
+
+	  /* Active filters mode */
+	  CAN1->FMR &= ~CAN_FMR_FINIT;
+ 8000448:	4b0b      	ldr	r3, [pc, #44]	; (8000478 <CAN1_Init+0x1d8>)
+ 800044a:	f8d3 3200 	ldr.w	r3, [r3, #512]	; 0x200
+ 800044e:	4a0a      	ldr	r2, [pc, #40]	; (8000478 <CAN1_Init+0x1d8>)
+ 8000450:	f023 0301 	bic.w	r3, r3, #1
+ 8000454:	f8c2 3200 	str.w	r3, [r2, #512]	; 0x200
+
+	  /* Request normal mode */
+	  CAN1->MCR &= ~(CAN_MCR_INRQ | CAN_MCR_SLEEP);
+ 8000458:	4b07      	ldr	r3, [pc, #28]	; (8000478 <CAN1_Init+0x1d8>)
+ 800045a:	681b      	ldr	r3, [r3, #0]
+ 800045c:	4a06      	ldr	r2, [pc, #24]	; (8000478 <CAN1_Init+0x1d8>)
+ 800045e:	f023 0303 	bic.w	r3, r3, #3
+ 8000462:	6013      	str	r3, [r2, #0]
+
+
+
+}
+ 8000464:	bf00      	nop
+ 8000466:	370c      	adds	r7, #12
+ 8000468:	46bd      	mov	sp, r7
+ 800046a:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 800046e:	4770      	bx	lr
+ 8000470:	40023800 	.word	0x40023800
+ 8000474:	40020000 	.word	0x40020000
+ 8000478:	40006400 	.word	0x40006400
+ 800047c:	00060004 	.word	0x00060004
+ 8000480:	04a004a0 	.word	0x04a004a0
+ 8000484:	fe1f0200 	.word	0xfe1f0200
+ 8000488:	02a002a0 	.word	0x02a002a0
+ 800048c:	fe1f0400 	.word	0xfe1f0400
+
+08000490 <CAN1_Transmit_Red1>:
+void CAN1_Transmit_Red1(void){
+ 8000490:	b480      	push	{r7}
+ 8000492:	af00      	add	r7, sp, #0
+
+	/* Check if transmission mailbox empty */
+	  if(CAN_TSR_TME0 == (CAN_TSR_TME0 & CAN1->TSR))
+ 8000494:	4b0f      	ldr	r3, [pc, #60]	; (80004d4 <CAN1_Transmit_Red1+0x44>)
+ 8000496:	689b      	ldr	r3, [r3, #8]
+ 8000498:	f003 6380 	and.w	r3, r3, #67108864	; 0x4000000
+ 800049c:	f1b3 6f80 	cmp.w	r3, #67108864	; 0x4000000
+ 80004a0:	d113      	bne.n	80004ca <CAN1_Transmit_Red1+0x3a>
+	  {
+
+		  /* Set CAN standard identifier = 0x100 */
+		  CAN1->sTxMailBox[0].TIR |= 0x02500000;
+ 80004a2:	4b0c      	ldr	r3, [pc, #48]	; (80004d4 <CAN1_Transmit_Red1+0x44>)
+ 80004a4:	f8d3 3180 	ldr.w	r3, [r3, #384]	; 0x180
+ 80004a8:	4a0a      	ldr	r2, [pc, #40]	; (80004d4 <CAN1_Transmit_Red1+0x44>)
+ 80004aa:	f043 7314 	orr.w	r3, r3, #38797312	; 0x2500000
+ 80004ae:	f8c2 3180 	str.w	r3, [r2, #384]	; 0x180
+
+	    /* Increment TX counter */
+	    //txCounter++;
+
+	    /* Set TX data */
+	    CAN1->sTxMailBox[0].TDLR = 0x0F;
+ 80004b2:	4b08      	ldr	r3, [pc, #32]	; (80004d4 <CAN1_Transmit_Red1+0x44>)
+ 80004b4:	220f      	movs	r2, #15
+ 80004b6:	f8c3 2188 	str.w	r2, [r3, #392]	; 0x188
+
+	    /* Transmission request */
+	    CAN1->sTxMailBox[0].TIR |= CAN_TI0R_TXRQ;
+ 80004ba:	4b06      	ldr	r3, [pc, #24]	; (80004d4 <CAN1_Transmit_Red1+0x44>)
+ 80004bc:	f8d3 3180 	ldr.w	r3, [r3, #384]	; 0x180
+ 80004c0:	4a04      	ldr	r2, [pc, #16]	; (80004d4 <CAN1_Transmit_Red1+0x44>)
+ 80004c2:	f043 0301 	orr.w	r3, r3, #1
+ 80004c6:	f8c2 3180 	str.w	r3, [r2, #384]	; 0x180
+	  else
+	  {
+	    /* Do nothing */
+	  }
+
+}
+ 80004ca:	bf00      	nop
+ 80004cc:	46bd      	mov	sp, r7
+ 80004ce:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 80004d2:	4770      	bx	lr
+ 80004d4:	40006400 	.word	0x40006400
+
+080004d8 <CAN1_Transmit_Red2>:
+void CAN1_Transmit_Red2(void){
+ 80004d8:	b480      	push	{r7}
+ 80004da:	af00      	add	r7, sp, #0
+	/* Check if transmission mailbox empty */
+	  if(CAN_TSR_TME0 == (CAN_TSR_TME0 & CAN1->TSR))
+ 80004dc:	4b0f      	ldr	r3, [pc, #60]	; (800051c <CAN1_Transmit_Red2+0x44>)
+ 80004de:	689b      	ldr	r3, [r3, #8]
+ 80004e0:	f003 6380 	and.w	r3, r3, #67108864	; 0x4000000
+ 80004e4:	f1b3 6f80 	cmp.w	r3, #67108864	; 0x4000000
+ 80004e8:	d113      	bne.n	8000512 <CAN1_Transmit_Red2+0x3a>
+	  {
+
+		  /* Set CAN standard identifier = 0x100 */
+		  CAN1->sTxMailBox[0].TIR |= 0x01300000;
+ 80004ea:	4b0c      	ldr	r3, [pc, #48]	; (800051c <CAN1_Transmit_Red2+0x44>)
+ 80004ec:	f8d3 3180 	ldr.w	r3, [r3, #384]	; 0x180
+ 80004f0:	4a0a      	ldr	r2, [pc, #40]	; (800051c <CAN1_Transmit_Red2+0x44>)
+ 80004f2:	f043 7398 	orr.w	r3, r3, #19922944	; 0x1300000
+ 80004f6:	f8c2 3180 	str.w	r3, [r2, #384]	; 0x180
+
+	    /* Increment TX counter */
+	    //txCounter++;
+
+	    /* Set TX data */
+	    CAN1->sTxMailBox[0].TDLR = 0x1F;
+ 80004fa:	4b08      	ldr	r3, [pc, #32]	; (800051c <CAN1_Transmit_Red2+0x44>)
+ 80004fc:	221f      	movs	r2, #31
+ 80004fe:	f8c3 2188 	str.w	r2, [r3, #392]	; 0x188
+
+	    /* Transmission request */
+	    CAN1->sTxMailBox[0].TIR |= CAN_TI0R_TXRQ;
+ 8000502:	4b06      	ldr	r3, [pc, #24]	; (800051c <CAN1_Transmit_Red2+0x44>)
+ 8000504:	f8d3 3180 	ldr.w	r3, [r3, #384]	; 0x180
+ 8000508:	4a04      	ldr	r2, [pc, #16]	; (800051c <CAN1_Transmit_Red2+0x44>)
+ 800050a:	f043 0301 	orr.w	r3, r3, #1
+ 800050e:	f8c2 3180 	str.w	r3, [r2, #384]	; 0x180
+	  else
+	  {
+	    /* Do nothing */
+	  }
+
+}
+ 8000512:	bf00      	nop
+ 8000514:	46bd      	mov	sp, r7
+ 8000516:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 800051a:	4770      	bx	lr
+ 800051c:	40006400 	.word	0x40006400
+
+08000520 <CAN1_Transmit_Green1>:
+void CAN1_Transmit_Green1(void){
+ 8000520:	b480      	push	{r7}
+ 8000522:	af00      	add	r7, sp, #0
+	/* Check if transmission mailbox empty */
+	  if(CAN_TSR_TME0 == (CAN_TSR_TME0 & CAN1->TSR))
+ 8000524:	4b0f      	ldr	r3, [pc, #60]	; (8000564 <CAN1_Transmit_Green1+0x44>)
+ 8000526:	689b      	ldr	r3, [r3, #8]
+ 8000528:	f003 6380 	and.w	r3, r3, #67108864	; 0x4000000
+ 800052c:	f1b3 6f80 	cmp.w	r3, #67108864	; 0x4000000
+ 8000530:	d113      	bne.n	800055a <CAN1_Transmit_Green1+0x3a>
+	  {
+
+		  /* Set CAN standard identifier = 0x100 */
+		  CAN1->sTxMailBox[0].TIR |= 0x01500000;
+ 8000532:	4b0c      	ldr	r3, [pc, #48]	; (8000564 <CAN1_Transmit_Green1+0x44>)
+ 8000534:	f8d3 3180 	ldr.w	r3, [r3, #384]	; 0x180
+ 8000538:	4a0a      	ldr	r2, [pc, #40]	; (8000564 <CAN1_Transmit_Green1+0x44>)
+ 800053a:	f043 73a8 	orr.w	r3, r3, #22020096	; 0x1500000
+ 800053e:	f8c2 3180 	str.w	r3, [r2, #384]	; 0x180
+
+	    /* Increment TX counter */
+	    //txCounter++;
+
+	    /* Set TX data */
+	    CAN1->sTxMailBox[0].TDLR = 0x0F;
+ 8000542:	4b08      	ldr	r3, [pc, #32]	; (8000564 <CAN1_Transmit_Green1+0x44>)
+ 8000544:	220f      	movs	r2, #15
+ 8000546:	f8c3 2188 	str.w	r2, [r3, #392]	; 0x188
+
+	    /* Transmission request */
+	    CAN1->sTxMailBox[0].TIR |= CAN_TI0R_TXRQ;
+ 800054a:	4b06      	ldr	r3, [pc, #24]	; (8000564 <CAN1_Transmit_Green1+0x44>)
+ 800054c:	f8d3 3180 	ldr.w	r3, [r3, #384]	; 0x180
+ 8000550:	4a04      	ldr	r2, [pc, #16]	; (8000564 <CAN1_Transmit_Green1+0x44>)
+ 8000552:	f043 0301 	orr.w	r3, r3, #1
+ 8000556:	f8c2 3180 	str.w	r3, [r2, #384]	; 0x180
+	  }
+	  else
+	  {
+	    /* Do nothing */
+	  }
+}
+ 800055a:	bf00      	nop
+ 800055c:	46bd      	mov	sp, r7
+ 800055e:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 8000562:	4770      	bx	lr
+ 8000564:	40006400 	.word	0x40006400
+
+08000568 <CAN1_Transmit_Green2>:
+void CAN1_Transmit_Green2(void){
+ 8000568:	b480      	push	{r7}
+ 800056a:	af00      	add	r7, sp, #0
+	/* Check if transmission mailbox empty */
+	  if(CAN_TSR_TME0 == (CAN_TSR_TME0 & CAN1->TSR))
+ 800056c:	4b0f      	ldr	r3, [pc, #60]	; (80005ac <CAN1_Transmit_Green2+0x44>)
+ 800056e:	689b      	ldr	r3, [r3, #8]
+ 8000570:	f003 6380 	and.w	r3, r3, #67108864	; 0x4000000
+ 8000574:	f1b3 6f80 	cmp.w	r3, #67108864	; 0x4000000
+ 8000578:	d113      	bne.n	80005a2 <CAN1_Transmit_Green2+0x3a>
+	  {
+
+		  /* Set CAN standard identifier = 0x100 */
+		  CAN1->sTxMailBox[0].TIR |= 0x02700000;
+ 800057a:	4b0c      	ldr	r3, [pc, #48]	; (80005ac <CAN1_Transmit_Green2+0x44>)
+ 800057c:	f8d3 3180 	ldr.w	r3, [r3, #384]	; 0x180
+ 8000580:	4a0a      	ldr	r2, [pc, #40]	; (80005ac <CAN1_Transmit_Green2+0x44>)
+ 8000582:	f043 731c 	orr.w	r3, r3, #40894464	; 0x2700000
+ 8000586:	f8c2 3180 	str.w	r3, [r2, #384]	; 0x180
+
+	    /* Increment TX counter */
+	    //txCounter++;
+
+	    /* Set TX data */
+	    CAN1->sTxMailBox[0].TDLR = 0x1F;
+ 800058a:	4b08      	ldr	r3, [pc, #32]	; (80005ac <CAN1_Transmit_Green2+0x44>)
+ 800058c:	221f      	movs	r2, #31
+ 800058e:	f8c3 2188 	str.w	r2, [r3, #392]	; 0x188
+
+	    /* Transmission request */
+	    CAN1->sTxMailBox[0].TIR |= CAN_TI0R_TXRQ;
+ 8000592:	4b06      	ldr	r3, [pc, #24]	; (80005ac <CAN1_Transmit_Green2+0x44>)
+ 8000594:	f8d3 3180 	ldr.w	r3, [r3, #384]	; 0x180
+ 8000598:	4a04      	ldr	r2, [pc, #16]	; (80005ac <CAN1_Transmit_Green2+0x44>)
+ 800059a:	f043 0301 	orr.w	r3, r3, #1
+ 800059e:	f8c2 3180 	str.w	r3, [r2, #384]	; 0x180
+	  }
+	  else
+	  {
+	    /* Do nothing */
+	  }
+}
+ 80005a2:	bf00      	nop
+ 80005a4:	46bd      	mov	sp, r7
+ 80005a6:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 80005aa:	4770      	bx	lr
+ 80005ac:	40006400 	.word	0x40006400
+
+080005b0 <CAN1_Receive>:
+
+
+void CAN1_Receive(void){
+ 80005b0:	b480      	push	{r7}
+ 80005b2:	b083      	sub	sp, #12
+ 80005b4:	af00      	add	r7, sp, #0
+	  uint8_t rxData;
+	  uint8_t dlc;
+	  uint8_t filterIndex;
+	  uint8_t i=0;
+ 80005b6:	2300      	movs	r3, #0
+ 80005b8:	71fb      	strb	r3, [r7, #7]
+	  /* Check FIFO message pending */
+	  if(0 != (CAN_RF0R_FMP0 & CAN1->RF0R))
+ 80005ba:	4b29      	ldr	r3, [pc, #164]	; (8000660 <CAN1_Receive+0xb0>)
+ 80005bc:	68db      	ldr	r3, [r3, #12]
+ 80005be:	f003 0303 	and.w	r3, r3, #3
+ 80005c2:	2b00      	cmp	r3, #0
+ 80005c4:	d046      	beq.n	8000654 <CAN1_Receive+0xa4>
+	  {
+	    /* FIFO not empty, read data */
+	    rxData = (uint8_t)(CAN1->sFIFOMailBox[0].RDLR);
+ 80005c6:	4b26      	ldr	r3, [pc, #152]	; (8000660 <CAN1_Receive+0xb0>)
+ 80005c8:	f8d3 31b8 	ldr.w	r3, [r3, #440]	; 0x1b8
+ 80005cc:	71bb      	strb	r3, [r7, #6]
+
+	    /* Get filter match index */
+	    filterIndex = (uint8_t)(CAN1->sFIFOMailBox[0].RDTR >> 8);
+ 80005ce:	4b24      	ldr	r3, [pc, #144]	; (8000660 <CAN1_Receive+0xb0>)
+ 80005d0:	f8d3 31b4 	ldr.w	r3, [r3, #436]	; 0x1b4
+ 80005d4:	0a1b      	lsrs	r3, r3, #8
+ 80005d6:	717b      	strb	r3, [r7, #5]
+
+	    /* Get data length code */
+	    dlc = (uint8_t)(CAN1->sFIFOMailBox[0].RDTR);
+ 80005d8:	4b21      	ldr	r3, [pc, #132]	; (8000660 <CAN1_Receive+0xb0>)
+ 80005da:	f8d3 31b4 	ldr.w	r3, [r3, #436]	; 0x1b4
+ 80005de:	713b      	strb	r3, [r7, #4]
+
+	    /* Check filter index */
+	    if((2 <= filterIndex) && (7 >= filterIndex) && (1 == dlc))
+ 80005e0:	797b      	ldrb	r3, [r7, #5]
+ 80005e2:	2b01      	cmp	r3, #1
+ 80005e4:	d91b      	bls.n	800061e <CAN1_Receive+0x6e>
+ 80005e6:	797b      	ldrb	r3, [r7, #5]
+ 80005e8:	2b07      	cmp	r3, #7
+ 80005ea:	d818      	bhi.n	800061e <CAN1_Receive+0x6e>
+ 80005ec:	793b      	ldrb	r3, [r7, #4]
+ 80005ee:	2b01      	cmp	r3, #1
+ 80005f0:	d115      	bne.n	800061e <CAN1_Receive+0x6e>
+	    {
+	      /* Green led control */
+	      if(0x0F == rxData)
+ 80005f2:	79bb      	ldrb	r3, [r7, #6]
+ 80005f4:	2b0f      	cmp	r3, #15
+ 80005f6:	d107      	bne.n	8000608 <CAN1_Receive+0x58>
+	      {
+	        /* Turn off green led */
+	     //   GPIO_TurnOFF_LED(EVAL_GREEN_LED);
+	    	  for(i;i<100;i++){
+ 80005f8:	e002      	b.n	8000600 <CAN1_Receive+0x50>
+ 80005fa:	79fb      	ldrb	r3, [r7, #7]
+ 80005fc:	3301      	adds	r3, #1
+ 80005fe:	71fb      	strb	r3, [r7, #7]
+ 8000600:	79fb      	ldrb	r3, [r7, #7]
+ 8000602:	2b63      	cmp	r3, #99	; 0x63
+ 8000604:	d9f9      	bls.n	80005fa <CAN1_Receive+0x4a>
+	      if(0x0F == rxData)
+ 8000606:	e01e      	b.n	8000646 <CAN1_Receive+0x96>
+
+	    	  }
+
+	      }
+	      else if (0x1F == rxData)
+ 8000608:	79bb      	ldrb	r3, [r7, #6]
+ 800060a:	2b1f      	cmp	r3, #31
+ 800060c:	d11b      	bne.n	8000646 <CAN1_Receive+0x96>
+	      {
+	        /* Turn on green led */
+	       // GPIO_TurnON_LED(EVAL_GREEN_LED);
+	    	  for(i;i<100;i++){
+ 800060e:	e002      	b.n	8000616 <CAN1_Receive+0x66>
+ 8000610:	79fb      	ldrb	r3, [r7, #7]
+ 8000612:	3301      	adds	r3, #1
+ 8000614:	71fb      	strb	r3, [r7, #7]
+ 8000616:	79fb      	ldrb	r3, [r7, #7]
+ 8000618:	2b63      	cmp	r3, #99	; 0x63
+ 800061a:	d9f9      	bls.n	8000610 <CAN1_Receive+0x60>
+	      if(0x0F == rxData)
+ 800061c:	e013      	b.n	8000646 <CAN1_Receive+0x96>
+	      else
+	      {
+	        /* Do nothing, invalid led control command */
+	      }
+	    }
+	    else if ((8 <= filterIndex) && (13 >= filterIndex) && (1 == dlc))
+ 800061e:	797b      	ldrb	r3, [r7, #5]
+ 8000620:	2b07      	cmp	r3, #7
+ 8000622:	d911      	bls.n	8000648 <CAN1_Receive+0x98>
+ 8000624:	797b      	ldrb	r3, [r7, #5]
+ 8000626:	2b0d      	cmp	r3, #13
+ 8000628:	d80e      	bhi.n	8000648 <CAN1_Receive+0x98>
+ 800062a:	793b      	ldrb	r3, [r7, #4]
+ 800062c:	2b01      	cmp	r3, #1
+ 800062e:	d10b      	bne.n	8000648 <CAN1_Receive+0x98>
+	    {
+	      /* Red led control */
+	      if(0x0F == rxData)
+ 8000630:	79bb      	ldrb	r3, [r7, #6]
+ 8000632:	2b0f      	cmp	r3, #15
+ 8000634:	d108      	bne.n	8000648 <CAN1_Receive+0x98>
+	      {
+	        /* Turn off red led */
+	        //GPIO_TurnOFF_LED(EVAL_RED_LED);
+	    	  for(i;i<100;i++){
+ 8000636:	e002      	b.n	800063e <CAN1_Receive+0x8e>
+ 8000638:	79fb      	ldrb	r3, [r7, #7]
+ 800063a:	3301      	adds	r3, #1
+ 800063c:	71fb      	strb	r3, [r7, #7]
+ 800063e:	79fb      	ldrb	r3, [r7, #7]
+ 8000640:	2b63      	cmp	r3, #99	; 0x63
+ 8000642:	d9f9      	bls.n	8000638 <CAN1_Receive+0x88>
+ 8000644:	e000      	b.n	8000648 <CAN1_Receive+0x98>
+	      if(0x0F == rxData)
+ 8000646:	bf00      	nop
+	    {
+	      /* Do noting, filter index or DLC not valid */
+	    }
+
+	    /* Release FIFO for the next message */
+	    CAN1->RF0R |= CAN_RF0R_RFOM0;
+ 8000648:	4b05      	ldr	r3, [pc, #20]	; (8000660 <CAN1_Receive+0xb0>)
+ 800064a:	68db      	ldr	r3, [r3, #12]
+ 800064c:	4a04      	ldr	r2, [pc, #16]	; (8000660 <CAN1_Receive+0xb0>)
+ 800064e:	f043 0320 	orr.w	r3, r3, #32
+ 8000652:	60d3      	str	r3, [r2, #12]
+	  else
+	  {
+	    /* Do nothing, no new data */
+	  }
+
+}
+ 8000654:	bf00      	nop
+ 8000656:	370c      	adds	r7, #12
+ 8000658:	46bd      	mov	sp, r7
+ 800065a:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 800065e:	4770      	bx	lr
+ 8000660:	40006400 	.word	0x40006400
+
+08000664 <ITM_SendChar>:
+           \li Is blocking when a debugger is connected, but the previous character sent has not been transmitted.
+  \param [in]     ch  Character to transmit.
+  \returns            Character to transmit.
+ */
+__STATIC_INLINE uint32_t ITM_SendChar (uint32_t ch)
+{
+ 8000664:	b480      	push	{r7}
+ 8000666:	b083      	sub	sp, #12
+ 8000668:	af00      	add	r7, sp, #0
+ 800066a:	6078      	str	r0, [r7, #4]
+  if (((ITM->TCR & ITM_TCR_ITMENA_Msk) != 0UL) &&      /* ITM enabled */
+ 800066c:	f04f 4360 	mov.w	r3, #3758096384	; 0xe0000000
+ 8000670:	f8d3 3e80 	ldr.w	r3, [r3, #3712]	; 0xe80
+ 8000674:	f003 0301 	and.w	r3, r3, #1
+ 8000678:	2b00      	cmp	r3, #0
+ 800067a:	d013      	beq.n	80006a4 <ITM_SendChar+0x40>
+      ((ITM->TER & 1UL               ) != 0UL)   )     /* ITM Port #0 enabled */
+ 800067c:	f04f 4360 	mov.w	r3, #3758096384	; 0xe0000000
+ 8000680:	f8d3 3e00 	ldr.w	r3, [r3, #3584]	; 0xe00
+ 8000684:	f003 0301 	and.w	r3, r3, #1
+  if (((ITM->TCR & ITM_TCR_ITMENA_Msk) != 0UL) &&      /* ITM enabled */
+ 8000688:	2b00      	cmp	r3, #0
+ 800068a:	d00b      	beq.n	80006a4 <ITM_SendChar+0x40>
+  {
+    while (ITM->PORT[0U].u32 == 0UL)
+ 800068c:	e000      	b.n	8000690 <ITM_SendChar+0x2c>
+    {
+      __NOP();
+ 800068e:	bf00      	nop
+    while (ITM->PORT[0U].u32 == 0UL)
+ 8000690:	f04f 4360 	mov.w	r3, #3758096384	; 0xe0000000
+ 8000694:	681b      	ldr	r3, [r3, #0]
+ 8000696:	2b00      	cmp	r3, #0
+ 8000698:	d0f9      	beq.n	800068e <ITM_SendChar+0x2a>
+    }
+    ITM->PORT[0U].u8 = (uint8_t)ch;
+ 800069a:	f04f 4360 	mov.w	r3, #3758096384	; 0xe0000000
+ 800069e:	687a      	ldr	r2, [r7, #4]
+ 80006a0:	b2d2      	uxtb	r2, r2
+ 80006a2:	701a      	strb	r2, [r3, #0]
+  }
+  return (ch);
+ 80006a4:	687b      	ldr	r3, [r7, #4]
+}
+ 80006a6:	4618      	mov	r0, r3
+ 80006a8:	370c      	adds	r7, #12
+ 80006aa:	46bd      	mov	sp, r7
+ 80006ac:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 80006b0:	4770      	bx	lr
+
+080006b2 <ITM_Printf>:
+ * @note
+ * @param   str
+ * @retval  None
+ */
+void ITM_Printf(char *str)
+{
+ 80006b2:	b580      	push	{r7, lr}
+ 80006b4:	b082      	sub	sp, #8
+ 80006b6:	af00      	add	r7, sp, #0
+ 80006b8:	6078      	str	r0, [r7, #4]
+  /* Check null pointers */
+  if(NULL != str)
+ 80006ba:	687b      	ldr	r3, [r7, #4]
+ 80006bc:	2b00      	cmp	r3, #0
+ 80006be:	d00c      	beq.n	80006da <ITM_Printf+0x28>
+  {
+    /* Start transmission to ITM port 0 */
+    while('\0' != *str)
+ 80006c0:	e007      	b.n	80006d2 <ITM_Printf+0x20>
+    {
+      /* Send a char */
+    	ITM_SendChar(*str);
+ 80006c2:	687b      	ldr	r3, [r7, #4]
+ 80006c4:	781b      	ldrb	r3, [r3, #0]
+ 80006c6:	4618      	mov	r0, r3
+ 80006c8:	f7ff ffcc 	bl	8000664 <ITM_SendChar>
+    	//ITM_SendChar_Port (0,*str );
+      /* Increment to the next char */
+      str++;
+ 80006cc:	687b      	ldr	r3, [r7, #4]
+ 80006ce:	3301      	adds	r3, #1
+ 80006d0:	607b      	str	r3, [r7, #4]
+    while('\0' != *str)
+ 80006d2:	687b      	ldr	r3, [r7, #4]
+ 80006d4:	781b      	ldrb	r3, [r3, #0]
+ 80006d6:	2b00      	cmp	r3, #0
+ 80006d8:	d1f3      	bne.n	80006c2 <ITM_Printf+0x10>
+    }
+  }
+}
+ 80006da:	bf00      	nop
+ 80006dc:	3708      	adds	r7, #8
+ 80006de:	46bd      	mov	sp, r7
+ 80006e0:	bd80      	pop	{r7, pc}
+	...
+
+080006e4 <thread1function>:
+ * @brief   thread1function
+ * @note
+ * @param   none
+ * @retval  none
+ */
+void thread1function(void) {
+ 80006e4:	b580      	push	{r7, lr}
+ 80006e6:	b082      	sub	sp, #8
+ 80006e8:	af00      	add	r7, sp, #0
+	uint32_t msg = 0x11223344;
+ 80006ea:	4b17      	ldr	r3, [pc, #92]	; (8000748 <thread1function+0x64>)
+ 80006ec:	607b      	str	r3, [r7, #4]
+
+	while (1) {
+		RTOS_SVC_semaphoreTake(&semaphore1, 1);
+ 80006ee:	2101      	movs	r1, #1
+ 80006f0:	4816      	ldr	r0, [pc, #88]	; (800074c <thread1function+0x68>)
+ 80006f2:	f7ff fdc5 	bl	8000280 <RTOS_SVC_semaphoreTake>
+		 RTOS_SVC_semaphoreGive(&semaphore1);
+ 80006f6:	4815      	ldr	r0, [pc, #84]	; (800074c <thread1function+0x68>)
+ 80006f8:	f7ff fdc4 	bl	8000284 <RTOS_SVC_semaphoreGive>
+
+		if(RTOS_SUCCESS == RTOS_SVC_mutexLock(&mutex1, 10))
+ 80006fc:	210a      	movs	r1, #10
+ 80006fe:	4814      	ldr	r0, [pc, #80]	; (8000750 <thread1function+0x6c>)
+ 8000700:	f7ff fdb8 	bl	8000274 <RTOS_SVC_mutexLock>
+ 8000704:	4603      	mov	r3, r0
+ 8000706:	2b00      	cmp	r3, #0
+ 8000708:	d105      	bne.n	8000716 <thread1function+0x32>
+		    {
+		      RTOS_SVC_threadDelay(15);
+ 800070a:	200f      	movs	r0, #15
+ 800070c:	f7ff fdc2 	bl	8000294 <RTOS_SVC_threadDelay>
+		      RTOS_SVC_mutexRelease(&mutex1);
+ 8000710:	480f      	ldr	r0, [pc, #60]	; (8000750 <thread1function+0x6c>)
+ 8000712:	f7ff fdb1 	bl	8000278 <RTOS_SVC_mutexRelease>
+		    }
+		    else
+		    {
+		    }
+	    RTOS_SVC_threadDelay(1);
+ 8000716:	2001      	movs	r0, #1
+ 8000718:	f7ff fdbc 	bl	8000294 <RTOS_SVC_threadDelay>
+		 CAN1_Transmit_Red1();
+ 800071c:	f7ff feb8 	bl	8000490 <CAN1_Transmit_Red1>
+	    RTOS_SVC_threadDelay(10);
+ 8000720:	200a      	movs	r0, #10
+ 8000722:	f7ff fdb7 	bl	8000294 <RTOS_SVC_threadDelay>
+
+		 CAN1_Transmit_Red2();
+ 8000726:	f7ff fed7 	bl	80004d8 <CAN1_Transmit_Red2>
+	    RTOS_SVC_threadDelay(10);
+ 800072a:	200a      	movs	r0, #10
+ 800072c:	f7ff fdb2 	bl	8000294 <RTOS_SVC_threadDelay>
+
+		 CAN1_Transmit_Green1();
+ 8000730:	f7ff fef6 	bl	8000520 <CAN1_Transmit_Green1>
+	    RTOS_SVC_threadDelay(10);
+ 8000734:	200a      	movs	r0, #10
+ 8000736:	f7ff fdad 	bl	8000294 <RTOS_SVC_threadDelay>
+
+		 CAN1_Transmit_Green2();
+ 800073a:	f7ff ff15 	bl	8000568 <CAN1_Transmit_Green2>
+	    RTOS_SVC_threadDelay(10);
+ 800073e:	200a      	movs	r0, #10
+ 8000740:	f7ff fda8 	bl	8000294 <RTOS_SVC_threadDelay>
+		RTOS_SVC_semaphoreTake(&semaphore1, 1);
+ 8000744:	e7d3      	b.n	80006ee <thread1function+0xa>
+ 8000746:	bf00      	nop
+ 8000748:	11223344 	.word	0x11223344
+ 800074c:	2000817c 	.word	0x2000817c
+ 8000750:	20008160 	.word	0x20008160
+
+08000754 <thread2function>:
+ * @brief   thread2function
+ * @note
+ * @param   none
+ * @retval  none
+ */
+void thread2function(void) {
+ 8000754:	b580      	push	{r7, lr}
+ 8000756:	b082      	sub	sp, #8
+ 8000758:	af00      	add	r7, sp, #0
+
+	uint32_t msg = 0x55667788;
+ 800075a:	4b0f      	ldr	r3, [pc, #60]	; (8000798 <thread2function+0x44>)
+ 800075c:	607b      	str	r3, [r7, #4]
+
+	while (1) {
+		RTOS_SVC_semaphoreTake(&semaphore1, 1);
+ 800075e:	2101      	movs	r1, #1
+ 8000760:	480e      	ldr	r0, [pc, #56]	; (800079c <thread2function+0x48>)
+ 8000762:	f7ff fd8d 	bl	8000280 <RTOS_SVC_semaphoreTake>
+		 RTOS_SVC_semaphoreGive(&semaphore1);
+ 8000766:	480d      	ldr	r0, [pc, #52]	; (800079c <thread2function+0x48>)
+ 8000768:	f7ff fd8c 	bl	8000284 <RTOS_SVC_semaphoreGive>
+
+		if(RTOS_SUCCESS == RTOS_SVC_mutexLock(&mutex1, 10))
+ 800076c:	210a      	movs	r1, #10
+ 800076e:	480c      	ldr	r0, [pc, #48]	; (80007a0 <thread2function+0x4c>)
+ 8000770:	f7ff fd80 	bl	8000274 <RTOS_SVC_mutexLock>
+ 8000774:	4603      	mov	r3, r0
+ 8000776:	2b00      	cmp	r3, #0
+ 8000778:	d105      	bne.n	8000786 <thread2function+0x32>
+		    {
+		      RTOS_SVC_threadDelay(15);
+ 800077a:	200f      	movs	r0, #15
+ 800077c:	f7ff fd8a 	bl	8000294 <RTOS_SVC_threadDelay>
+		      RTOS_SVC_mutexRelease(&mutex1);
+ 8000780:	4807      	ldr	r0, [pc, #28]	; (80007a0 <thread2function+0x4c>)
+ 8000782:	f7ff fd79 	bl	8000278 <RTOS_SVC_mutexRelease>
+		    }
+		    else
+		    {
+		    }
+
+		    RTOS_SVC_threadDelay(1);
+ 8000786:	2001      	movs	r0, #1
+ 8000788:	f7ff fd84 	bl	8000294 <RTOS_SVC_threadDelay>
+	    CAN1_Receive();
+ 800078c:	f7ff ff10 	bl	80005b0 <CAN1_Receive>
+	    RTOS_SVC_threadDelay(1);
+ 8000790:	2001      	movs	r0, #1
+ 8000792:	f7ff fd7f 	bl	8000294 <RTOS_SVC_threadDelay>
+		RTOS_SVC_semaphoreTake(&semaphore1, 1);
+ 8000796:	e7e2      	b.n	800075e <thread2function+0xa>
+ 8000798:	55667788 	.word	0x55667788
+ 800079c:	2000817c 	.word	0x2000817c
+ 80007a0:	20008160 	.word	0x20008160
+
+080007a4 <thread3function>:
+ * @brief   thread2function
+ * @note
+ * @param   none
+ * @retval  none
+ */
+void thread3function(void) {
+ 80007a4:	b580      	push	{r7, lr}
+ 80007a6:	b082      	sub	sp, #8
+ 80007a8:	af00      	add	r7, sp, #0
+	uint32_t msg = 0x99101011;
+ 80007aa:	4b0b      	ldr	r3, [pc, #44]	; (80007d8 <thread3function+0x34>)
+ 80007ac:	607b      	str	r3, [r7, #4]
+
+	while (1) {
+	    if(RTOS_SUCCESS == RTOS_SVC_mutexLock(&mutex1, 10))
+ 80007ae:	210a      	movs	r1, #10
+ 80007b0:	480a      	ldr	r0, [pc, #40]	; (80007dc <thread3function+0x38>)
+ 80007b2:	f7ff fd5f 	bl	8000274 <RTOS_SVC_mutexLock>
+ 80007b6:	4603      	mov	r3, r0
+ 80007b8:	2b00      	cmp	r3, #0
+ 80007ba:	d108      	bne.n	80007ce <thread3function+0x2a>
+	    {
+	      ITM_Printf("Thread 3: Mutex lock succeeded \n");
+ 80007bc:	4808      	ldr	r0, [pc, #32]	; (80007e0 <thread3function+0x3c>)
+ 80007be:	f7ff ff78 	bl	80006b2 <ITM_Printf>
+	      RTOS_SVC_threadDelay(15);
+ 80007c2:	200f      	movs	r0, #15
+ 80007c4:	f7ff fd66 	bl	8000294 <RTOS_SVC_threadDelay>
+	      RTOS_SVC_mutexRelease(&mutex1);
+ 80007c8:	4804      	ldr	r0, [pc, #16]	; (80007dc <thread3function+0x38>)
+ 80007ca:	f7ff fd55 	bl	8000278 <RTOS_SVC_mutexRelease>
+	    else
+	    {
+
+	    }
+
+	    RTOS_SVC_threadDelay(1);
+ 80007ce:	2001      	movs	r0, #1
+ 80007d0:	f7ff fd60 	bl	8000294 <RTOS_SVC_threadDelay>
+	    if(RTOS_SUCCESS == RTOS_SVC_mutexLock(&mutex1, 10))
+ 80007d4:	e7eb      	b.n	80007ae <thread3function+0xa>
+ 80007d6:	bf00      	nop
+ 80007d8:	99101011 	.word	0x99101011
+ 80007dc:	20008160 	.word	0x20008160
+ 80007e0:	08001b0c 	.word	0x08001b0c
+
+080007e4 <thread4function>:
+ * @brief   thread2function
+ * @note
+ * @param   none
+ * @retval  none
+ */
+void thread4function(void) {
+ 80007e4:	b480      	push	{r7}
+ 80007e6:	af00      	add	r7, sp, #0
+
+	while (1) {
+ 80007e8:	e7fe      	b.n	80007e8 <thread4function+0x4>
+	...
+
+080007ec <main>:
+/**
+ * @brief  The application entry point.
+ * @retval int
+ */
+
+int main(void) {
+ 80007ec:	b580      	push	{r7, lr}
+ 80007ee:	af00      	add	r7, sp, #0
+
+	/* Configure the system clock */
+
+	/* USER CODE BEGIN SysInit */
+
+	CAN1_Init();
+ 80007f0:	f7ff fd56 	bl	80002a0 <CAN1_Init>
+
+	RTOS_init();
+ 80007f4:	f000 f93e 	bl	8000a74 <RTOS_init>
+
+	RTOS_SVC_threadCreate(&thread1, &thread1stack, 1, thread1function);
+ 80007f8:	4b14      	ldr	r3, [pc, #80]	; (800084c <main+0x60>)
+ 80007fa:	2201      	movs	r2, #1
+ 80007fc:	4914      	ldr	r1, [pc, #80]	; (8000850 <main+0x64>)
+ 80007fe:	4815      	ldr	r0, [pc, #84]	; (8000854 <main+0x68>)
+ 8000800:	f7ff fd34 	bl	800026c <RTOS_SVC_threadCreate>
+	RTOS_SVC_threadCreate(&thread2, &thread2stack, 1, thread2function);
+ 8000804:	4b14      	ldr	r3, [pc, #80]	; (8000858 <main+0x6c>)
+ 8000806:	2201      	movs	r2, #1
+ 8000808:	4914      	ldr	r1, [pc, #80]	; (800085c <main+0x70>)
+ 800080a:	4815      	ldr	r0, [pc, #84]	; (8000860 <main+0x74>)
+ 800080c:	f7ff fd2e 	bl	800026c <RTOS_SVC_threadCreate>
+	RTOS_SVC_threadCreate(&thread3, &thread3stack, 1, thread3function);
+ 8000810:	4b14      	ldr	r3, [pc, #80]	; (8000864 <main+0x78>)
+ 8000812:	2201      	movs	r2, #1
+ 8000814:	4914      	ldr	r1, [pc, #80]	; (8000868 <main+0x7c>)
+ 8000816:	4815      	ldr	r0, [pc, #84]	; (800086c <main+0x80>)
+ 8000818:	f7ff fd28 	bl	800026c <RTOS_SVC_threadCreate>
+	RTOS_SVC_threadCreate(&thread4, &thread4stack, 1, thread4function);
+ 800081c:	4b14      	ldr	r3, [pc, #80]	; (8000870 <main+0x84>)
+ 800081e:	2201      	movs	r2, #1
+ 8000820:	4914      	ldr	r1, [pc, #80]	; (8000874 <main+0x88>)
+ 8000822:	4815      	ldr	r0, [pc, #84]	; (8000878 <main+0x8c>)
+ 8000824:	f7ff fd22 	bl	800026c <RTOS_SVC_threadCreate>
+
+	RTOS_SVC_mutexCreate(&mutex1, 1);
+ 8000828:	2101      	movs	r1, #1
+ 800082a:	4814      	ldr	r0, [pc, #80]	; (800087c <main+0x90>)
+ 800082c:	f7ff fd20 	bl	8000270 <RTOS_SVC_mutexCreate>
+	RTOS_SVC_semaphoreCreate(&semaphore1, 1);
+ 8000830:	2101      	movs	r1, #1
+ 8000832:	4813      	ldr	r0, [pc, #76]	; (8000880 <main+0x94>)
+ 8000834:	f7ff fd22 	bl	800027c <RTOS_SVC_semaphoreCreate>
+	RTOS_SVC_mailboxCreate(&mailbox1, mailbox1buffer, 2, 4);
+ 8000838:	2304      	movs	r3, #4
+ 800083a:	2202      	movs	r2, #2
+ 800083c:	4911      	ldr	r1, [pc, #68]	; (8000884 <main+0x98>)
+ 800083e:	4812      	ldr	r0, [pc, #72]	; (8000888 <main+0x9c>)
+ 8000840:	f7ff fd22 	bl	8000288 <RTOS_SVC_mailboxCreate>
+
+	RTOS_SVC_schedulerStart();
+ 8000844:	f7ff fd10 	bl	8000268 <RTOS_SVC_schedulerStart>
+
+	/* USER CODE END 2 */
+
+	/* Infinite loop */
+	/* USER CODE BEGIN WHILE */
+	while (1) {
+ 8000848:	e7fe      	b.n	8000848 <main+0x5c>
+ 800084a:	bf00      	nop
+ 800084c:	080006e5 	.word	0x080006e5
+ 8000850:	20000070 	.word	0x20000070
+ 8000854:	20000024 	.word	0x20000024
+ 8000858:	08000755 	.word	0x08000755
+ 800085c:	200020c0 	.word	0x200020c0
+ 8000860:	20002070 	.word	0x20002070
+ 8000864:	080007a5 	.word	0x080007a5
+ 8000868:	20004110 	.word	0x20004110
+ 800086c:	200040c0 	.word	0x200040c0
+ 8000870:	080007e5 	.word	0x080007e5
+ 8000874:	20006160 	.word	0x20006160
+ 8000878:	20006110 	.word	0x20006110
+ 800087c:	20008160 	.word	0x20008160
+ 8000880:	2000817c 	.word	0x2000817c
+ 8000884:	200081c8 	.word	0x200081c8
+ 8000888:	20008198 	.word	0x20008198
+
+0800088c <NMI_Handler>:
+/******************************************************************************/
+/**
+  * @brief This function handles Non maskable interrupt.
+  */
+void NMI_Handler(void)
+{
+ 800088c:	b480      	push	{r7}
+ 800088e:	af00      	add	r7, sp, #0
+  /* USER CODE BEGIN NonMaskableInt_IRQn 0 */
+
+  /* USER CODE END NonMaskableInt_IRQn 0 */
+  /* USER CODE BEGIN NonMaskableInt_IRQn 1 */
+  while (1)
+ 8000890:	e7fe      	b.n	8000890 <NMI_Handler+0x4>
+
+08000892 <HardFault_Handler>:
+
+/**
+  * @brief This function handles Hard fault interrupt.
+  */
+void HardFault_Handler(void)
+{
+ 8000892:	b480      	push	{r7}
+ 8000894:	af00      	add	r7, sp, #0
+  /* USER CODE BEGIN HardFault_IRQn 0 */
+
+  /* USER CODE END HardFault_IRQn 0 */
+  while (1)
+ 8000896:	e7fe      	b.n	8000896 <HardFault_Handler+0x4>
+
+08000898 <MemManage_Handler>:
+
+/**
+  * @brief This function handles Memory management fault.
+  */
+void MemManage_Handler(void)
+{
+ 8000898:	b480      	push	{r7}
+ 800089a:	af00      	add	r7, sp, #0
+  /* USER CODE BEGIN MemoryManagement_IRQn 0 */
+
+  /* USER CODE END MemoryManagement_IRQn 0 */
+  while (1)
+ 800089c:	e7fe      	b.n	800089c <MemManage_Handler+0x4>
+
+0800089e <BusFault_Handler>:
+
+/**
+  * @brief This function handles Pre-fetch fault, memory access fault.
+  */
+void BusFault_Handler(void)
+{
+ 800089e:	b480      	push	{r7}
+ 80008a0:	af00      	add	r7, sp, #0
+  /* USER CODE BEGIN BusFault_IRQn 0 */
+
+  /* USER CODE END BusFault_IRQn 0 */
+  while (1)
+ 80008a2:	e7fe      	b.n	80008a2 <BusFault_Handler+0x4>
+
+080008a4 <UsageFault_Handler>:
+
+/**
+  * @brief This function handles Undefined instruction or illegal state.
+  */
+void UsageFault_Handler(void)
+{
+ 80008a4:	b480      	push	{r7}
+ 80008a6:	af00      	add	r7, sp, #0
+  /* USER CODE BEGIN UsageFault_IRQn 0 */
+
+  /* USER CODE END UsageFault_IRQn 0 */
+  while (1)
+ 80008a8:	e7fe      	b.n	80008a8 <UsageFault_Handler+0x4>
+
+080008aa <DebugMon_Handler>:
+
+/**
+  * @brief This function handles Debug monitor.
+  */
+void DebugMon_Handler(void)
+{
+ 80008aa:	b480      	push	{r7}
+ 80008ac:	af00      	add	r7, sp, #0
+
+  /* USER CODE END DebugMonitor_IRQn 0 */
+  /* USER CODE BEGIN DebugMonitor_IRQn 1 */
+
+  /* USER CODE END DebugMonitor_IRQn 1 */
+}
+ 80008ae:	bf00      	nop
+ 80008b0:	46bd      	mov	sp, r7
+ 80008b2:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 80008b6:	4770      	bx	lr
+
+080008b8 <SystemInit>:
+  *         configuration.
+  * @param  None
+  * @retval None
+  */
+void SystemInit(void)
+{
+ 80008b8:	b480      	push	{r7}
+ 80008ba:	af00      	add	r7, sp, #0
+  /* FPU settings ------------------------------------------------------------*/
+  #if (__FPU_PRESENT == 1) && (__FPU_USED == 1)
+    SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2));  /* set CP10 and CP11 Full Access */
+ 80008bc:	4b06      	ldr	r3, [pc, #24]	; (80008d8 <SystemInit+0x20>)
+ 80008be:	f8d3 3088 	ldr.w	r3, [r3, #136]	; 0x88
+ 80008c2:	4a05      	ldr	r2, [pc, #20]	; (80008d8 <SystemInit+0x20>)
+ 80008c4:	f443 0370 	orr.w	r3, r3, #15728640	; 0xf00000
+ 80008c8:	f8c2 3088 	str.w	r3, [r2, #136]	; 0x88
+
+  /* Configure the Vector Table location -------------------------------------*/
+#if defined(USER_VECT_TAB_ADDRESS)
+  SCB->VTOR = VECT_TAB_BASE_ADDRESS | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal SRAM */
+#endif /* USER_VECT_TAB_ADDRESS */
+}
+ 80008cc:	bf00      	nop
+ 80008ce:	46bd      	mov	sp, r7
+ 80008d0:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 80008d4:	4770      	bx	lr
+ 80008d6:	bf00      	nop
+ 80008d8:	e000ed00 	.word	0xe000ed00
+
+080008dc <Reset_Handler>:
+
+    .section  .text.Reset_Handler
+  .weak  Reset_Handler
+  .type  Reset_Handler, %function
+Reset_Handler: 
+  ldr   sp, =_estack       /* set stack pointer */
+ 80008dc:	f8df d034 	ldr.w	sp, [pc, #52]	; 8000914 <LoopFillZerobss+0x12>
+ 
+/* Copy the data segment initializers from flash to SRAM */  
+  ldr r0, =_sdata
+ 80008e0:	480d      	ldr	r0, [pc, #52]	; (8000918 <LoopFillZerobss+0x16>)
+  ldr r1, =_edata
+ 80008e2:	490e      	ldr	r1, [pc, #56]	; (800091c <LoopFillZerobss+0x1a>)
+  ldr r2, =_sidata
+ 80008e4:	4a0e      	ldr	r2, [pc, #56]	; (8000920 <LoopFillZerobss+0x1e>)
+  movs r3, #0
+ 80008e6:	2300      	movs	r3, #0
+  b LoopCopyDataInit
+ 80008e8:	e002      	b.n	80008f0 <LoopCopyDataInit>
+
+080008ea <CopyDataInit>:
+
+CopyDataInit:
+  ldr r4, [r2, r3]
+ 80008ea:	58d4      	ldr	r4, [r2, r3]
+  str r4, [r0, r3]
+ 80008ec:	50c4      	str	r4, [r0, r3]
+  adds r3, r3, #4
+ 80008ee:	3304      	adds	r3, #4
+
+080008f0 <LoopCopyDataInit>:
+
+LoopCopyDataInit:
+  adds r4, r0, r3
+ 80008f0:	18c4      	adds	r4, r0, r3
+  cmp r4, r1
+ 80008f2:	428c      	cmp	r4, r1
+  bcc CopyDataInit
+ 80008f4:	d3f9      	bcc.n	80008ea <CopyDataInit>
+  
+/* Zero fill the bss segment. */
+  ldr r2, =_sbss
+ 80008f6:	4a0b      	ldr	r2, [pc, #44]	; (8000924 <LoopFillZerobss+0x22>)
+  ldr r4, =_ebss
+ 80008f8:	4c0b      	ldr	r4, [pc, #44]	; (8000928 <LoopFillZerobss+0x26>)
+  movs r3, #0
+ 80008fa:	2300      	movs	r3, #0
+  b LoopFillZerobss
+ 80008fc:	e001      	b.n	8000902 <LoopFillZerobss>
+
+080008fe <FillZerobss>:
+
+FillZerobss:
+  str  r3, [r2]
+ 80008fe:	6013      	str	r3, [r2, #0]
+  adds r2, r2, #4
+ 8000900:	3204      	adds	r2, #4
+
+08000902 <LoopFillZerobss>:
+
+LoopFillZerobss:
+  cmp r2, r4
+ 8000902:	42a2      	cmp	r2, r4
+  bcc FillZerobss
+ 8000904:	d3fb      	bcc.n	80008fe <FillZerobss>
+
+/* Call the clock system intitialization function.*/
+  bl  SystemInit   
+ 8000906:	f7ff ffd7 	bl	80008b8 <SystemInit>
+/* Call static constructors */
+    bl __libc_init_array
+ 800090a:	f001 f8c1 	bl	8001a90 <__libc_init_array>
+/* Call the application's entry point.*/
+  bl  main
+ 800090e:	f7ff ff6d 	bl	80007ec <main>
+  bx  lr    
+ 8000912:	4770      	bx	lr
+  ldr   sp, =_estack       /* set stack pointer */
+ 8000914:	20030000 	.word	0x20030000
+  ldr r0, =_sdata
+ 8000918:	20000000 	.word	0x20000000
+  ldr r1, =_edata
+ 800091c:	20000004 	.word	0x20000004
+  ldr r2, =_sidata
+ 8000920:	08001c00 	.word	0x08001c00
+  ldr r2, =_sbss
+ 8000924:	20000008 	.word	0x20000008
+  ldr r4, =_ebss
+ 8000928:	2000a390 	.word	0x2000a390
+
+0800092c <ADC_IRQHandler>:
+ * @retval None       
+*/
+    .section  .text.Default_Handler,"ax",%progbits
+Default_Handler:
+Infinite_Loop:
+  b  Infinite_Loop
+ 800092c:	e7fe      	b.n	800092c <ADC_IRQHandler>
+
+0800092e <assert_failed>:
+ * brief
+ * note
+ * param   void
+ * retval  void
+ */
+void assert_failed(uint8_t *file, uint32_t line) {
+ 800092e:	b580      	push	{r7, lr}
+ 8000930:	b082      	sub	sp, #8
+ 8000932:	af00      	add	r7, sp, #0
+ 8000934:	6078      	str	r0, [r7, #4]
+ 8000936:	6039      	str	r1, [r7, #0]
+	/* USER CODE BEGIN 6 */
+	/* User can add his own implementation to report the file name and line number,
+	 ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+
+	Error_Handler();
+ 8000938:	f000 f804 	bl	8000944 <Error_Handler>
+	/* USER CODE END 6 */
+}
+ 800093c:	bf00      	nop
+ 800093e:	3708      	adds	r7, #8
+ 8000940:	46bd      	mov	sp, r7
+ 8000942:	bd80      	pop	{r7, pc}
+
+08000944 <Error_Handler>:
+
+/**
+ * @brief  This function is executed in case of error occurrence.
+ * @retval None
+ */
+void Error_Handler(void) {
+ 8000944:	b480      	push	{r7}
+ 8000946:	af00      	add	r7, sp, #0
+  \details Disables IRQ interrupts by setting the I-bit in the CPSR.
+           Can only be executed in Privileged modes.
+ */
+__STATIC_FORCEINLINE void __disable_irq(void)
+{
+  __ASM volatile ("cpsid i" : : : "memory");
+ 8000948:	b672      	cpsid	i
+}
+ 800094a:	bf00      	nop
+	/* USER CODE BEGIN Error_Handler_Debug */
+	/* User can add his own implementation to report the HAL error return state */
+	__disable_irq();
+	while (1) {
+ 800094c:	e7fe      	b.n	800094c <Error_Handler+0x8>
+	...
+
+08000950 <__NVIC_SetPriorityGrouping>:
+{
+ 8000950:	b480      	push	{r7}
+ 8000952:	b085      	sub	sp, #20
+ 8000954:	af00      	add	r7, sp, #0
+ 8000956:	6078      	str	r0, [r7, #4]
+  uint32_t PriorityGroupTmp = (PriorityGroup & (uint32_t)0x07UL);             /* only values 0..7 are used          */
+ 8000958:	687b      	ldr	r3, [r7, #4]
+ 800095a:	f003 0307 	and.w	r3, r3, #7
+ 800095e:	60fb      	str	r3, [r7, #12]
+  reg_value  =  SCB->AIRCR;                                                   /* read old register configuration    */
+ 8000960:	4b0c      	ldr	r3, [pc, #48]	; (8000994 <__NVIC_SetPriorityGrouping+0x44>)
+ 8000962:	68db      	ldr	r3, [r3, #12]
+ 8000964:	60bb      	str	r3, [r7, #8]
+  reg_value &= ~((uint32_t)(SCB_AIRCR_VECTKEY_Msk | SCB_AIRCR_PRIGROUP_Msk)); /* clear bits to change               */
+ 8000966:	68ba      	ldr	r2, [r7, #8]
+ 8000968:	f64f 03ff 	movw	r3, #63743	; 0xf8ff
+ 800096c:	4013      	ands	r3, r2
+ 800096e:	60bb      	str	r3, [r7, #8]
+                (PriorityGroupTmp << SCB_AIRCR_PRIGROUP_Pos)  );              /* Insert write key and priority group */
+ 8000970:	68fb      	ldr	r3, [r7, #12]
+ 8000972:	021a      	lsls	r2, r3, #8
+                ((uint32_t)0x5FAUL << SCB_AIRCR_VECTKEY_Pos) |
+ 8000974:	68bb      	ldr	r3, [r7, #8]
+ 8000976:	4313      	orrs	r3, r2
+  reg_value  =  (reg_value                                   |
+ 8000978:	f043 63bf 	orr.w	r3, r3, #100139008	; 0x5f80000
+ 800097c:	f443 3300 	orr.w	r3, r3, #131072	; 0x20000
+ 8000980:	60bb      	str	r3, [r7, #8]
+  SCB->AIRCR =  reg_value;
+ 8000982:	4a04      	ldr	r2, [pc, #16]	; (8000994 <__NVIC_SetPriorityGrouping+0x44>)
+ 8000984:	68bb      	ldr	r3, [r7, #8]
+ 8000986:	60d3      	str	r3, [r2, #12]
+}
+ 8000988:	bf00      	nop
+ 800098a:	3714      	adds	r7, #20
+ 800098c:	46bd      	mov	sp, r7
+ 800098e:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 8000992:	4770      	bx	lr
+ 8000994:	e000ed00 	.word	0xe000ed00
+
+08000998 <__NVIC_EnableIRQ>:
+{
+ 8000998:	b480      	push	{r7}
+ 800099a:	b083      	sub	sp, #12
+ 800099c:	af00      	add	r7, sp, #0
+ 800099e:	4603      	mov	r3, r0
+ 80009a0:	71fb      	strb	r3, [r7, #7]
+  if ((int32_t)(IRQn) >= 0)
+ 80009a2:	f997 3007 	ldrsb.w	r3, [r7, #7]
+ 80009a6:	2b00      	cmp	r3, #0
+ 80009a8:	db0b      	blt.n	80009c2 <__NVIC_EnableIRQ+0x2a>
+    NVIC->ISER[(((uint32_t)IRQn) >> 5UL)] = (uint32_t)(1UL << (((uint32_t)IRQn) & 0x1FUL));
+ 80009aa:	79fb      	ldrb	r3, [r7, #7]
+ 80009ac:	f003 021f 	and.w	r2, r3, #31
+ 80009b0:	4907      	ldr	r1, [pc, #28]	; (80009d0 <__NVIC_EnableIRQ+0x38>)
+ 80009b2:	f997 3007 	ldrsb.w	r3, [r7, #7]
+ 80009b6:	095b      	lsrs	r3, r3, #5
+ 80009b8:	2001      	movs	r0, #1
+ 80009ba:	fa00 f202 	lsl.w	r2, r0, r2
+ 80009be:	f841 2023 	str.w	r2, [r1, r3, lsl #2]
+}
+ 80009c2:	bf00      	nop
+ 80009c4:	370c      	adds	r7, #12
+ 80009c6:	46bd      	mov	sp, r7
+ 80009c8:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 80009cc:	4770      	bx	lr
+ 80009ce:	bf00      	nop
+ 80009d0:	e000e100 	.word	0xe000e100
+
+080009d4 <__NVIC_SetPriority>:
+{
+ 80009d4:	b480      	push	{r7}
+ 80009d6:	b083      	sub	sp, #12
+ 80009d8:	af00      	add	r7, sp, #0
+ 80009da:	4603      	mov	r3, r0
+ 80009dc:	6039      	str	r1, [r7, #0]
+ 80009de:	71fb      	strb	r3, [r7, #7]
+  if ((int32_t)(IRQn) >= 0)
+ 80009e0:	f997 3007 	ldrsb.w	r3, [r7, #7]
+ 80009e4:	2b00      	cmp	r3, #0
+ 80009e6:	db0a      	blt.n	80009fe <__NVIC_SetPriority+0x2a>
+    NVIC->IP[((uint32_t)IRQn)]               = (uint8_t)((priority << (8U - __NVIC_PRIO_BITS)) & (uint32_t)0xFFUL);
+ 80009e8:	683b      	ldr	r3, [r7, #0]
+ 80009ea:	b2da      	uxtb	r2, r3
+ 80009ec:	490c      	ldr	r1, [pc, #48]	; (8000a20 <__NVIC_SetPriority+0x4c>)
+ 80009ee:	f997 3007 	ldrsb.w	r3, [r7, #7]
+ 80009f2:	0112      	lsls	r2, r2, #4
+ 80009f4:	b2d2      	uxtb	r2, r2
+ 80009f6:	440b      	add	r3, r1
+ 80009f8:	f883 2300 	strb.w	r2, [r3, #768]	; 0x300
+}
+ 80009fc:	e00a      	b.n	8000a14 <__NVIC_SetPriority+0x40>
+    SCB->SHP[(((uint32_t)IRQn) & 0xFUL)-4UL] = (uint8_t)((priority << (8U - __NVIC_PRIO_BITS)) & (uint32_t)0xFFUL);
+ 80009fe:	683b      	ldr	r3, [r7, #0]
+ 8000a00:	b2da      	uxtb	r2, r3
+ 8000a02:	4908      	ldr	r1, [pc, #32]	; (8000a24 <__NVIC_SetPriority+0x50>)
+ 8000a04:	79fb      	ldrb	r3, [r7, #7]
+ 8000a06:	f003 030f 	and.w	r3, r3, #15
+ 8000a0a:	3b04      	subs	r3, #4
+ 8000a0c:	0112      	lsls	r2, r2, #4
+ 8000a0e:	b2d2      	uxtb	r2, r2
+ 8000a10:	440b      	add	r3, r1
+ 8000a12:	761a      	strb	r2, [r3, #24]
+}
+ 8000a14:	bf00      	nop
+ 8000a16:	370c      	adds	r7, #12
+ 8000a18:	46bd      	mov	sp, r7
+ 8000a1a:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 8000a1e:	4770      	bx	lr
+ 8000a20:	e000e100 	.word	0xe000e100
+ 8000a24:	e000ed00 	.word	0xe000ed00
+
+08000a28 <SysTick_Config>:
+{
+ 8000a28:	b580      	push	{r7, lr}
+ 8000a2a:	b082      	sub	sp, #8
+ 8000a2c:	af00      	add	r7, sp, #0
+ 8000a2e:	6078      	str	r0, [r7, #4]
+  if ((ticks - 1UL) > SysTick_LOAD_RELOAD_Msk)
+ 8000a30:	687b      	ldr	r3, [r7, #4]
+ 8000a32:	3b01      	subs	r3, #1
+ 8000a34:	f1b3 7f80 	cmp.w	r3, #16777216	; 0x1000000
+ 8000a38:	d301      	bcc.n	8000a3e <SysTick_Config+0x16>
+    return (1UL);                                                   /* Reload value impossible */
+ 8000a3a:	2301      	movs	r3, #1
+ 8000a3c:	e00f      	b.n	8000a5e <SysTick_Config+0x36>
+  SysTick->LOAD  = (uint32_t)(ticks - 1UL);                         /* set reload register */
+ 8000a3e:	4a0a      	ldr	r2, [pc, #40]	; (8000a68 <SysTick_Config+0x40>)
+ 8000a40:	687b      	ldr	r3, [r7, #4]
+ 8000a42:	3b01      	subs	r3, #1
+ 8000a44:	6053      	str	r3, [r2, #4]
+  NVIC_SetPriority (SysTick_IRQn, (1UL << __NVIC_PRIO_BITS) - 1UL); /* set Priority for Systick Interrupt */
+ 8000a46:	210f      	movs	r1, #15
+ 8000a48:	f04f 30ff 	mov.w	r0, #4294967295
+ 8000a4c:	f7ff ffc2 	bl	80009d4 <__NVIC_SetPriority>
+  SysTick->VAL   = 0UL;                                             /* Load the SysTick Counter Value */
+ 8000a50:	4b05      	ldr	r3, [pc, #20]	; (8000a68 <SysTick_Config+0x40>)
+ 8000a52:	2200      	movs	r2, #0
+ 8000a54:	609a      	str	r2, [r3, #8]
+  SysTick->CTRL  = SysTick_CTRL_CLKSOURCE_Msk |
+ 8000a56:	4b04      	ldr	r3, [pc, #16]	; (8000a68 <SysTick_Config+0x40>)
+ 8000a58:	2207      	movs	r2, #7
+ 8000a5a:	601a      	str	r2, [r3, #0]
+  return (0UL);                                                     /* Function successful */
+ 8000a5c:	2300      	movs	r3, #0
+}
+ 8000a5e:	4618      	mov	r0, r3
+ 8000a60:	3708      	adds	r7, #8
+ 8000a62:	46bd      	mov	sp, r7
+ 8000a64:	bd80      	pop	{r7, pc}
+ 8000a66:	bf00      	nop
+ 8000a68:	e000e010 	.word	0xe000e010
+
+08000a6c <idleThreadFunction>:
+ * @brief   Idle thread function
+ * @note
+ * @param   None
+ * @retval  None
+ */
+static void idleThreadFunction(void) {
+ 8000a6c:	b480      	push	{r7}
+ 8000a6e:	af00      	add	r7, sp, #0
+	while (1) {
+ 8000a70:	e7fe      	b.n	8000a70 <idleThreadFunction+0x4>
+	...
+
+08000a74 <RTOS_init>:
+ * @brief   RTOS Initialization function
+ * @note
+ * @param   None
+ * @retval  None
+ */
+void RTOS_init(void) {
+ 8000a74:	b580      	push	{r7, lr}
+ 8000a76:	b082      	sub	sp, #8
+ 8000a78:	af00      	add	r7, sp, #0
+  __ASM volatile ("cpsid i" : : : "memory");
+ 8000a7a:	b672      	cpsid	i
+}
+ 8000a7c:	bf00      	nop
+	/* Disable interrupts */
+	__disable_irq();
+
+	/* Enable double word stack alignment */
+	/* because our stack in the threads are 64bit which is double word  */
+	SCB->CCR |= SCB_CCR_STKALIGN_Msk;
+ 8000a7e:	4b1c      	ldr	r3, [pc, #112]	; (8000af0 <RTOS_init+0x7c>)
+ 8000a80:	695b      	ldr	r3, [r3, #20]
+ 8000a82:	4a1b      	ldr	r2, [pc, #108]	; (8000af0 <RTOS_init+0x7c>)
+ 8000a84:	f443 7300 	orr.w	r3, r3, #512	; 0x200
+ 8000a88:	6153      	str	r3, [r2, #20]
+
+	/* Configure and enable SysTick interrupts */
+	ASSERT_param(0 == SysTick_Config(SYSTEM_CORE_CLOCK_HZ / SYS_TICK_RATE_HZ));
+ 8000a8a:	481a      	ldr	r0, [pc, #104]	; (8000af4 <RTOS_init+0x80>)
+ 8000a8c:	f7ff ffcc 	bl	8000a28 <SysTick_Config>
+ 8000a90:	4603      	mov	r3, r0
+ 8000a92:	2b00      	cmp	r3, #0
+ 8000a94:	d003      	beq.n	8000a9e <RTOS_init+0x2a>
+ 8000a96:	2183      	movs	r1, #131	; 0x83
+ 8000a98:	4817      	ldr	r0, [pc, #92]	; (8000af8 <RTOS_init+0x84>)
+ 8000a9a:	f7ff ff48 	bl	800092e <assert_failed>
+
+	/* Set priority group to 3
+	 * bits[3:0] are the sub-priority,
+	 * bits[7:4] are the preempt priority (0-15) */
+	NVIC_SetPriorityGrouping(3);
+ 8000a9e:	2003      	movs	r0, #3
+ 8000aa0:	f7ff ff56 	bl	8000950 <__NVIC_SetPriorityGrouping>
+
+	/* Set priority levels */
+	/* SVCall can't be interrupted by any mean */
+	NVIC_SetPriority(SVCall_IRQn, 0);
+ 8000aa4:	2100      	movs	r1, #0
+ 8000aa6:	f06f 0004 	mvn.w	r0, #4
+ 8000aaa:	f7ff ff93 	bl	80009d4 <__NVIC_SetPriority>
+	NVIC_SetPriority(SysTick_IRQn, 1);
+ 8000aae:	2101      	movs	r1, #1
+ 8000ab0:	f04f 30ff 	mov.w	r0, #4294967295
+ 8000ab4:	f7ff ff8e 	bl	80009d4 <__NVIC_SetPriority>
+
+	/* Set PendSV to lowest possible priority */
+	/* responsible for the context switching */
+	NVIC_SetPriority(PendSV_IRQn, 0xFF);
+ 8000ab8:	21ff      	movs	r1, #255	; 0xff
+ 8000aba:	f06f 0001 	mvn.w	r0, #1
+ 8000abe:	f7ff ff89 	bl	80009d4 <__NVIC_SetPriority>
+
+	/* Enable SVC and PendSV interrupts */
+	NVIC_EnableIRQ(PendSV_IRQn);
+ 8000ac2:	f06f 0001 	mvn.w	r0, #1
+ 8000ac6:	f7ff ff67 	bl	8000998 <__NVIC_EnableIRQ>
+	NVIC_EnableIRQ(SVCall_IRQn);
+ 8000aca:	f06f 0004 	mvn.w	r0, #4
+ 8000ace:	f7ff ff63 	bl	8000998 <__NVIC_EnableIRQ>
+ 8000ad2:	2301      	movs	r3, #1
+ 8000ad4:	607b      	str	r3, [r7, #4]
+  \details Assigns the given value to the Base Priority register.
+  \param [in]    basePri  Base Priority value to set
+ */
+__STATIC_FORCEINLINE void __set_BASEPRI(uint32_t basePri)
+{
+  __ASM volatile ("MSR basepri, %0" : : "r" (basePri) : "memory");
+ 8000ad6:	687b      	ldr	r3, [r7, #4]
+ 8000ad8:	f383 8811 	msr	BASEPRI, r3
+}
+ 8000adc:	bf00      	nop
+
+	/* Disable all interrupts except SVC */
+	__set_BASEPRI(1);
+
+	/* Initialize thread module */
+	RTOS_threadInitLists();
+ 8000ade:	f000 fd45 	bl	800156c <RTOS_threadInitLists>
+  __ASM volatile ("cpsie i" : : : "memory");
+ 8000ae2:	b662      	cpsie	i
+}
+ 8000ae4:	bf00      	nop
+
+	/* Enable interrupts */
+	__enable_irq();
+
+}
+ 8000ae6:	bf00      	nop
+ 8000ae8:	3708      	adds	r7, #8
+ 8000aea:	46bd      	mov	sp, r7
+ 8000aec:	bd80      	pop	{r7, pc}
+ 8000aee:	bf00      	nop
+ 8000af0:	e000ed00 	.word	0xe000ed00
+ 8000af4:	0002bf20 	.word	0x0002bf20
+ 8000af8:	08001b30 	.word	0x08001b30
+
+08000afc <RTOS_SVC_Handler_main>:
+ * 			svc_args[0]=  pThread ,svc_args[1]=  pStack ,svc_args[2]=  priority ,svc_args[3]=  pFunction,
+ * 			and svc_args[4]= ,svc_args[5]= ,svc_args[6]= the Stacked program counter
+ * @param   uint32_t *
+ * @retval  None
+ */
+void RTOS_SVC_Handler_main(uint32_t *svc_args) {
+ 8000afc:	b580      	push	{r7, lr}
+ 8000afe:	b084      	sub	sp, #16
+ 8000b00:	af00      	add	r7, sp, #0
+ 8000b02:	6078      	str	r0, [r7, #4]
+	 * Stacked PC 	 = svc_args[6]  (PC) (Program counter)
+	 * Stacked xPSR  = svc_args[7]	(R14) (Link register)
+	 */
+
+	/* Check input parameters */
+	ASSERT_param(NULL != svc_args);
+ 8000b04:	687b      	ldr	r3, [r7, #4]
+ 8000b06:	2b00      	cmp	r3, #0
+ 8000b08:	d103      	bne.n	8000b12 <RTOS_SVC_Handler_main+0x16>
+ 8000b0a:	21bb      	movs	r1, #187	; 0xbb
+ 8000b0c:	4875      	ldr	r0, [pc, #468]	; (8000ce4 <RTOS_SVC_Handler_main+0x1e8>)
+ 8000b0e:	f7ff ff0e 	bl	800092e <assert_failed>
+	/* Memory[(Stacked PC)-2] */
+	/* program counter has been stacked when we entered the exception handler of the SVC
+	 * So thought getting the program counter that has been stacked and get the 2 previous instruction we can extract the parameter
+	 * of the SVC call trigger   */
+	/*extracted from the instruction code*/
+	svc_number = ((char*) svc_args[6])[-2];
+ 8000b12:	687b      	ldr	r3, [r7, #4]
+ 8000b14:	3318      	adds	r3, #24
+ 8000b16:	681b      	ldr	r3, [r3, #0]
+ 8000b18:	3b02      	subs	r3, #2
+ 8000b1a:	781b      	ldrb	r3, [r3, #0]
+ 8000b1c:	73bb      	strb	r3, [r7, #14]
+	RTOS_return_t returnStatus;
+
+	/* EnablePrivilegedMode */
+	//__set_CONTROL(__get_CONTROL() & ~CONTROL_nPRIV_Msk);
+	/* Check svc number */
+	switch (svc_number) {
+ 8000b1e:	7bbb      	ldrb	r3, [r7, #14]
+ 8000b20:	2b0d      	cmp	r3, #13
+ 8000b22:	f200 80b0 	bhi.w	8000c86 <RTOS_SVC_Handler_main+0x18a>
+ 8000b26:	a201      	add	r2, pc, #4	; (adr r2, 8000b2c <RTOS_SVC_Handler_main+0x30>)
+ 8000b28:	f852 f023 	ldr.w	pc, [r2, r3, lsl #2]
+ 8000b2c:	08000b65 	.word	0x08000b65
+ 8000b30:	08000b6b 	.word	0x08000b6b
+ 8000b34:	08000b8b 	.word	0x08000b8b
+ 8000b38:	08000ba1 	.word	0x08000ba1
+ 8000b3c:	08000bbb 	.word	0x08000bbb
+ 8000b40:	08000bc7 	.word	0x08000bc7
+ 8000b44:	08000bdd 	.word	0x08000bdd
+ 8000b48:	08000bf7 	.word	0x08000bf7
+ 8000b4c:	08000c03 	.word	0x08000c03
+ 8000b50:	08000c23 	.word	0x08000c23
+ 8000b54:	08000c43 	.word	0x08000c43
+ 8000b58:	08000c63 	.word	0x08000c63
+ 8000b5c:	08000c6f 	.word	0x08000c6f
+ 8000b60:	08000c7b 	.word	0x08000c7b
+
+	case 0: //Scheduler start
+		RTOS_schedulerStart();
+ 8000b64:	f000 f8c0 	bl	8000ce8 <RTOS_schedulerStart>
+		break;
+ 8000b68:	e093      	b.n	8000c92 <RTOS_SVC_Handler_main+0x196>
+
+	case 1: //thread create
+		RTOS_threadCreate((RTOS_thread_t*) svc_args[0],
+ 8000b6a:	687b      	ldr	r3, [r7, #4]
+ 8000b6c:	681b      	ldr	r3, [r3, #0]
+ 8000b6e:	4618      	mov	r0, r3
+				(RTOS_stack_t*) svc_args[1], (uint32_t) svc_args[2],
+ 8000b70:	687b      	ldr	r3, [r7, #4]
+ 8000b72:	3304      	adds	r3, #4
+ 8000b74:	681b      	ldr	r3, [r3, #0]
+		RTOS_threadCreate((RTOS_thread_t*) svc_args[0],
+ 8000b76:	4619      	mov	r1, r3
+				(RTOS_stack_t*) svc_args[1], (uint32_t) svc_args[2],
+ 8000b78:	687b      	ldr	r3, [r7, #4]
+ 8000b7a:	3308      	adds	r3, #8
+		RTOS_threadCreate((RTOS_thread_t*) svc_args[0],
+ 8000b7c:	681a      	ldr	r2, [r3, #0]
+				(void*) svc_args[3]);
+ 8000b7e:	687b      	ldr	r3, [r7, #4]
+ 8000b80:	330c      	adds	r3, #12
+ 8000b82:	681b      	ldr	r3, [r3, #0]
+		RTOS_threadCreate((RTOS_thread_t*) svc_args[0],
+ 8000b84:	f000 fd10 	bl	80015a8 <RTOS_threadCreate>
+		break;
+ 8000b88:	e083      	b.n	8000c92 <RTOS_SVC_Handler_main+0x196>
+
+	case 2:	//mutex Create
+		/* svc_args[0] is the RTOS_mutex_t * & svc_args[1] is the initial value   */
+		RTOS_mutexCreate((RTOS_mutex_t*) svc_args[0], (uint32_t) svc_args[1]);
+ 8000b8a:	687b      	ldr	r3, [r7, #4]
+ 8000b8c:	681b      	ldr	r3, [r3, #0]
+ 8000b8e:	461a      	mov	r2, r3
+ 8000b90:	687b      	ldr	r3, [r7, #4]
+ 8000b92:	3304      	adds	r3, #4
+ 8000b94:	681b      	ldr	r3, [r3, #0]
+ 8000b96:	4619      	mov	r1, r3
+ 8000b98:	4610      	mov	r0, r2
+ 8000b9a:	f000 fb21 	bl	80011e0 <RTOS_mutexCreate>
+		break;
+ 8000b9e:	e078      	b.n	8000c92 <RTOS_SVC_Handler_main+0x196>
+
+	case 3:	//mutex Lock
+		/* svc_args[0] is the RTOS_mutex_t * & svc_args[1] is the waiting flag   */
+		returnStatus = RTOS_mutexLock((RTOS_mutex_t*) svc_args[0],
+ 8000ba0:	687b      	ldr	r3, [r7, #4]
+ 8000ba2:	681b      	ldr	r3, [r3, #0]
+ 8000ba4:	461a      	mov	r2, r3
+				(uint32_t) svc_args[1]);
+ 8000ba6:	687b      	ldr	r3, [r7, #4]
+ 8000ba8:	3304      	adds	r3, #4
+ 8000baa:	681b      	ldr	r3, [r3, #0]
+		returnStatus = RTOS_mutexLock((RTOS_mutex_t*) svc_args[0],
+ 8000bac:	4619      	mov	r1, r3
+ 8000bae:	4610      	mov	r0, r2
+ 8000bb0:	f000 fb3e 	bl	8001230 <RTOS_mutexLock>
+ 8000bb4:	4603      	mov	r3, r0
+ 8000bb6:	73fb      	strb	r3, [r7, #15]
+		break;
+ 8000bb8:	e06b      	b.n	8000c92 <RTOS_SVC_Handler_main+0x196>
+
+	case 4:	//mutex Release
+		/* svc_args[0] is the RTOS_mutex_t *  */
+		RTOS_mutexRelease((RTOS_mutex_t*) svc_args[0]);
+ 8000bba:	687b      	ldr	r3, [r7, #4]
+ 8000bbc:	681b      	ldr	r3, [r3, #0]
+ 8000bbe:	4618      	mov	r0, r3
+ 8000bc0:	f000 fbb0 	bl	8001324 <RTOS_mutexRelease>
+
+		break;
+ 8000bc4:	e065      	b.n	8000c92 <RTOS_SVC_Handler_main+0x196>
+
+	case 5:
+		RTOS_semaphoreCreate((RTOS_semaphore_t*) svc_args[0],
+ 8000bc6:	687b      	ldr	r3, [r7, #4]
+ 8000bc8:	681b      	ldr	r3, [r3, #0]
+ 8000bca:	461a      	mov	r2, r3
+				(uint32_t) svc_args[1]);
+ 8000bcc:	687b      	ldr	r3, [r7, #4]
+ 8000bce:	3304      	adds	r3, #4
+		RTOS_semaphoreCreate((RTOS_semaphore_t*) svc_args[0],
+ 8000bd0:	681b      	ldr	r3, [r3, #0]
+ 8000bd2:	4619      	mov	r1, r3
+ 8000bd4:	4610      	mov	r0, r2
+ 8000bd6:	f000 fbe1 	bl	800139c <RTOS_semaphoreCreate>
+		break;
+ 8000bda:	e05a      	b.n	8000c92 <RTOS_SVC_Handler_main+0x196>
+
+	case 6:
+		returnStatus = RTOS_semaphoreTake((RTOS_semaphore_t*) svc_args[0],
+ 8000bdc:	687b      	ldr	r3, [r7, #4]
+ 8000bde:	681b      	ldr	r3, [r3, #0]
+ 8000be0:	461a      	mov	r2, r3
+				(uint32_t) svc_args[1]);
+ 8000be2:	687b      	ldr	r3, [r7, #4]
+ 8000be4:	3304      	adds	r3, #4
+ 8000be6:	681b      	ldr	r3, [r3, #0]
+		returnStatus = RTOS_semaphoreTake((RTOS_semaphore_t*) svc_args[0],
+ 8000be8:	4619      	mov	r1, r3
+ 8000bea:	4610      	mov	r0, r2
+ 8000bec:	f000 fbf0 	bl	80013d0 <RTOS_semaphoreTake>
+ 8000bf0:	4603      	mov	r3, r0
+ 8000bf2:	73fb      	strb	r3, [r7, #15]
+		break;
+ 8000bf4:	e04d      	b.n	8000c92 <RTOS_SVC_Handler_main+0x196>
+
+	case 7:
+		RTOS_semaphoreGive((RTOS_semaphore_t*) svc_args[0]);
+ 8000bf6:	687b      	ldr	r3, [r7, #4]
+ 8000bf8:	681b      	ldr	r3, [r3, #0]
+ 8000bfa:	4618      	mov	r0, r3
+ 8000bfc:	f000 fc60 	bl	80014c0 <RTOS_semaphoreGive>
+		break;
+ 8000c00:	e047      	b.n	8000c92 <RTOS_SVC_Handler_main+0x196>
+
+	case 8:
+		RTOS_mailboxCreate((RTOS_mailbox_t*) svc_args[0], (void*) svc_args[1],
+ 8000c02:	687b      	ldr	r3, [r7, #4]
+ 8000c04:	681b      	ldr	r3, [r3, #0]
+ 8000c06:	4618      	mov	r0, r3
+ 8000c08:	687b      	ldr	r3, [r7, #4]
+ 8000c0a:	3304      	adds	r3, #4
+ 8000c0c:	681b      	ldr	r3, [r3, #0]
+ 8000c0e:	4619      	mov	r1, r3
+				(uint32_t) svc_args[2], (uint32_t) svc_args[3]);
+ 8000c10:	687b      	ldr	r3, [r7, #4]
+ 8000c12:	3308      	adds	r3, #8
+		RTOS_mailboxCreate((RTOS_mailbox_t*) svc_args[0], (void*) svc_args[1],
+ 8000c14:	681a      	ldr	r2, [r3, #0]
+				(uint32_t) svc_args[2], (uint32_t) svc_args[3]);
+ 8000c16:	687b      	ldr	r3, [r7, #4]
+ 8000c18:	330c      	adds	r3, #12
+		RTOS_mailboxCreate((RTOS_mailbox_t*) svc_args[0], (void*) svc_args[1],
+ 8000c1a:	681b      	ldr	r3, [r3, #0]
+ 8000c1c:	f000 f9cc 	bl	8000fb8 <RTOS_mailboxCreate>
+		break;
+ 8000c20:	e037      	b.n	8000c92 <RTOS_SVC_Handler_main+0x196>
+
+	case 9:
+		returnStatus = RTOS_mailboxWrite((RTOS_mailbox_t*) svc_args[0],
+ 8000c22:	687b      	ldr	r3, [r7, #4]
+ 8000c24:	681b      	ldr	r3, [r3, #0]
+ 8000c26:	4618      	mov	r0, r3
+				(uint32_t) svc_args[1], (const void* const ) svc_args[2]);
+ 8000c28:	687b      	ldr	r3, [r7, #4]
+ 8000c2a:	3304      	adds	r3, #4
+ 8000c2c:	681b      	ldr	r3, [r3, #0]
+		returnStatus = RTOS_mailboxWrite((RTOS_mailbox_t*) svc_args[0],
+ 8000c2e:	4619      	mov	r1, r3
+				(uint32_t) svc_args[1], (const void* const ) svc_args[2]);
+ 8000c30:	687b      	ldr	r3, [r7, #4]
+ 8000c32:	3308      	adds	r3, #8
+ 8000c34:	681b      	ldr	r3, [r3, #0]
+		returnStatus = RTOS_mailboxWrite((RTOS_mailbox_t*) svc_args[0],
+ 8000c36:	461a      	mov	r2, r3
+ 8000c38:	f000 fa10 	bl	800105c <RTOS_mailboxWrite>
+ 8000c3c:	4603      	mov	r3, r0
+ 8000c3e:	73fb      	strb	r3, [r7, #15]
+		break;
+ 8000c40:	e027      	b.n	8000c92 <RTOS_SVC_Handler_main+0x196>
+
+	case 10:
+		returnStatus = RTOS_mailboxRead((RTOS_mailbox_t*) svc_args[0],
+ 8000c42:	687b      	ldr	r3, [r7, #4]
+ 8000c44:	681b      	ldr	r3, [r3, #0]
+ 8000c46:	4618      	mov	r0, r3
+				(uint32_t) svc_args[1], (void* const ) svc_args[2]);
+ 8000c48:	687b      	ldr	r3, [r7, #4]
+ 8000c4a:	3304      	adds	r3, #4
+ 8000c4c:	681b      	ldr	r3, [r3, #0]
+		returnStatus = RTOS_mailboxRead((RTOS_mailbox_t*) svc_args[0],
+ 8000c4e:	4619      	mov	r1, r3
+				(uint32_t) svc_args[1], (void* const ) svc_args[2]);
+ 8000c50:	687b      	ldr	r3, [r7, #4]
+ 8000c52:	3308      	adds	r3, #8
+ 8000c54:	681b      	ldr	r3, [r3, #0]
+		returnStatus = RTOS_mailboxRead((RTOS_mailbox_t*) svc_args[0],
+ 8000c56:	461a      	mov	r2, r3
+ 8000c58:	f000 fa60 	bl	800111c <RTOS_mailboxRead>
+ 8000c5c:	4603      	mov	r3, r0
+ 8000c5e:	73fb      	strb	r3, [r7, #15]
+		break;
+ 8000c60:	e017      	b.n	8000c92 <RTOS_SVC_Handler_main+0x196>
+
+	case 11:
+		RTOS_threadAddRunningToTimerList((uint32_t) svc_args[0]);
+ 8000c62:	687b      	ldr	r3, [r7, #4]
+ 8000c64:	681b      	ldr	r3, [r3, #0]
+ 8000c66:	4618      	mov	r0, r3
+ 8000c68:	f000 fdb2 	bl	80017d0 <RTOS_threadAddRunningToTimerList>
+		break;
+ 8000c6c:	e011      	b.n	8000c92 <RTOS_SVC_Handler_main+0x196>
+
+	case 12:
+		RTOS_threadDestroy((RTOS_thread_t*) svc_args[0]);
+ 8000c6e:	687b      	ldr	r3, [r7, #4]
+ 8000c70:	681b      	ldr	r3, [r3, #0]
+ 8000c72:	4618      	mov	r0, r3
+ 8000c74:	f000 fe38 	bl	80018e8 <RTOS_threadDestroy>
+		break;
+ 8000c78:	e00b      	b.n	8000c92 <RTOS_SVC_Handler_main+0x196>
+
+	case 13:
+		#if (1 == USE_PRIORITY_SET)
+        RTOS_threadPrioritySet((uint32_t) svc_args[0]);
+ 8000c7a:	687b      	ldr	r3, [r7, #4]
+ 8000c7c:	681b      	ldr	r3, [r3, #0]
+ 8000c7e:	4618      	mov	r0, r3
+ 8000c80:	f000 fece 	bl	8001a20 <RTOS_threadPrioritySet>
+      #endif
+		break;
+ 8000c84:	e005      	b.n	8000c92 <RTOS_SVC_Handler_main+0x196>
+
+	default:
+		/* Not supported svc call */
+		ASSERT_param(0);
+ 8000c86:	f240 1119 	movw	r1, #281	; 0x119
+ 8000c8a:	4816      	ldr	r0, [pc, #88]	; (8000ce4 <RTOS_SVC_Handler_main+0x1e8>)
+ 8000c8c:	f7ff fe4f 	bl	800092e <assert_failed>
+		break;
+ 8000c90:	bf00      	nop
+	}
+
+	switch (svc_number) {
+ 8000c92:	7bbb      	ldrb	r3, [r7, #14]
+ 8000c94:	2b0a      	cmp	r3, #10
+ 8000c96:	bf8c      	ite	hi
+ 8000c98:	2201      	movhi	r2, #1
+ 8000c9a:	2200      	movls	r2, #0
+ 8000c9c:	b2d2      	uxtb	r2, r2
+ 8000c9e:	2a00      	cmp	r2, #0
+ 8000ca0:	d11a      	bne.n	8000cd8 <RTOS_SVC_Handler_main+0x1dc>
+ 8000ca2:	2201      	movs	r2, #1
+ 8000ca4:	fa02 f303 	lsl.w	r3, r2, r3
+ 8000ca8:	f403 63c9 	and.w	r3, r3, #1608	; 0x648
+ 8000cac:	2b00      	cmp	r3, #0
+ 8000cae:	bf14      	ite	ne
+ 8000cb0:	2301      	movne	r3, #1
+ 8000cb2:	2300      	moveq	r3, #0
+ 8000cb4:	b2db      	uxtb	r3, r3
+ 8000cb6:	2b00      	cmp	r3, #0
+ 8000cb8:	d00e      	beq.n	8000cd8 <RTOS_SVC_Handler_main+0x1dc>
+	case 3:  //mutex		lock
+	case 6:  //semaphore 	lock
+	case 9:  //mailbox 		write
+	case 10: //mailbox 		read
+		/* Check return status */
+		if (RTOS_CONTEXT_SWITCH_TRIGGERED == returnStatus) //we blocked the thread
+ 8000cba:	7bfb      	ldrb	r3, [r7, #15]
+ 8000cbc:	2b02      	cmp	r3, #2
+ 8000cbe:	d107      	bne.n	8000cd0 <RTOS_SVC_Handler_main+0x1d4>
+			 **/
+			/* note here we still in the context and TCB of the thread that blocked because
+			 * it couldn't take the shared recourse */
+			/* note here we decrease the program counter by 2bytes because we are using thumb if we
+			 * are using arm instruction we should decrease 4bytes  */
+			svc_args[6] = svc_args[6] - 2;
+ 8000cc0:	687b      	ldr	r3, [r7, #4]
+ 8000cc2:	3318      	adds	r3, #24
+ 8000cc4:	681a      	ldr	r2, [r3, #0]
+ 8000cc6:	687b      	ldr	r3, [r7, #4]
+ 8000cc8:	3318      	adds	r3, #24
+ 8000cca:	3a02      	subs	r2, #2
+ 8000ccc:	601a      	str	r2, [r3, #0]
+		{
+			/* No context switch was triggered, pass return value */
+
+			svc_args[0] = returnStatus;
+		}
+		break;
+ 8000cce:	e004      	b.n	8000cda <RTOS_SVC_Handler_main+0x1de>
+			svc_args[0] = returnStatus;
+ 8000cd0:	7bfa      	ldrb	r2, [r7, #15]
+ 8000cd2:	687b      	ldr	r3, [r7, #4]
+ 8000cd4:	601a      	str	r2, [r3, #0]
+		break;
+ 8000cd6:	e000      	b.n	8000cda <RTOS_SVC_Handler_main+0x1de>
+
+	default:
+		/* Handled above */
+		break;
+ 8000cd8:	bf00      	nop
+	}
+
+}
+ 8000cda:	bf00      	nop
+ 8000cdc:	3710      	adds	r7, #16
+ 8000cde:	46bd      	mov	sp, r7
+ 8000ce0:	bd80      	pop	{r7, pc}
+ 8000ce2:	bf00      	nop
+ 8000ce4:	08001b30 	.word	0x08001b30
+
+08000ce8 <RTOS_schedulerStart>:
+ * @brief   Start RTOS scheduler
+ * @note
+ * @param   None
+ * @retval  None
+ */
+void RTOS_schedulerStart(void) {
+ 8000ce8:	b580      	push	{r7, lr}
+ 8000cea:	b084      	sub	sp, #16
+ 8000cec:	af00      	add	r7, sp, #0
+	/* create idle thread */
+	RTOS_threadCreate(&idleThread, &idleThreadStack,
+ 8000cee:	4b18      	ldr	r3, [pc, #96]	; (8000d50 <RTOS_schedulerStart+0x68>)
+ 8000cf0:	220f      	movs	r2, #15
+ 8000cf2:	4918      	ldr	r1, [pc, #96]	; (8000d54 <RTOS_schedulerStart+0x6c>)
+ 8000cf4:	4818      	ldr	r0, [pc, #96]	; (8000d58 <RTOS_schedulerStart+0x70>)
+ 8000cf6:	f000 fc57 	bl	80015a8 <RTOS_threadCreate>
+
+	/* create pointer for the running thread */
+	RTOS_thread_t *pRunningThread;
+
+	/* update the running thread */
+	RTOS_threadSwitchRunning();
+ 8000cfa:	f000 fd07 	bl	800170c <RTOS_threadSwitchRunning>
+
+	/* Get running thread */
+	pRunningThread = RTOS_threadGetRunning();
+ 8000cfe:	f000 fd5b 	bl	80017b8 <RTOS_threadGetRunning>
+ 8000d02:	60f8      	str	r0, [r7, #12]
+	/* it put the stack pointer to the first register
+	 * that being stack and responsible for the context switching
+	 * which is the EXC_Return  */
+	/* we put its value not its address */
+	/* this value is passed to the linker register to tell him we start to work in thread mode */
+	svcEXEReturn = MEM32_ADDRESS(pRunningThread->pStackPointer);
+ 8000d04:	68fb      	ldr	r3, [r7, #12]
+ 8000d06:	681b      	ldr	r3, [r3, #0]
+ 8000d08:	681b      	ldr	r3, [r3, #0]
+ 8000d0a:	4a14      	ldr	r2, [pc, #80]	; (8000d5c <RTOS_schedulerStart+0x74>)
+ 8000d0c:	6013      	str	r3, [r2, #0]
+	 * The function sets the Process Stack Pointer (PSP) value using the instruction MSR.
+	 * */
+	/* make the process stack pointer to points on the R0 register because it's the
+	 * last thing that the processor stacked before serve the exception so we make the
+	 * Process Stack pointer points to the things that will be unstacked after returning */
+	__set_PSP((uint32_t) (pRunningThread->pStackPointer + 10 * 4));
+ 8000d0e:	68fb      	ldr	r3, [r7, #12]
+ 8000d10:	681b      	ldr	r3, [r3, #0]
+ 8000d12:	3328      	adds	r3, #40	; 0x28
+ 8000d14:	603b      	str	r3, [r7, #0]
+  __ASM volatile ("MSR psp, %0" : : "r" (topOfProcStack) : );
+ 8000d16:	683b      	ldr	r3, [r7, #0]
+ 8000d18:	f383 8809 	msr	PSP, r3
+}
+ 8000d1c:	bf00      	nop
+
+	/* Switch to use Process Stack, unprivileged state */
+	__set_CONTROL(MEM32_ADDRESS((pRunningThread->pStackPointer + (1 << 2))));
+ 8000d1e:	68fb      	ldr	r3, [r7, #12]
+ 8000d20:	681b      	ldr	r3, [r3, #0]
+ 8000d22:	3304      	adds	r3, #4
+ 8000d24:	681b      	ldr	r3, [r3, #0]
+ 8000d26:	607b      	str	r3, [r7, #4]
+  __ASM volatile ("MSR control, %0" : : "r" (control) : "memory");
+ 8000d28:	687b      	ldr	r3, [r7, #4]
+ 8000d2a:	f383 8814 	msr	CONTROL, r3
+}
+ 8000d2e:	bf00      	nop
+           so that all instructions following the ISB are fetched from cache or memory,
+           after the instruction has been completed.
+ */
+__STATIC_FORCEINLINE void __ISB(void)
+{
+  __ASM volatile ("isb 0xF":::"memory");
+ 8000d30:	f3bf 8f6f 	isb	sy
+}
+ 8000d34:	bf00      	nop
+	 * fetched after the ISB.
+	 * */
+	__ISB();
+
+	/* Flag scheduler is running */
+	schedulerRunning = 1;
+ 8000d36:	4b0a      	ldr	r3, [pc, #40]	; (8000d60 <RTOS_schedulerStart+0x78>)
+ 8000d38:	2201      	movs	r2, #1
+ 8000d3a:	601a      	str	r2, [r3, #0]
+ 8000d3c:	2300      	movs	r3, #0
+ 8000d3e:	60bb      	str	r3, [r7, #8]
+  __ASM volatile ("MSR basepri, %0" : : "r" (basePri) : "memory");
+ 8000d40:	68bb      	ldr	r3, [r7, #8]
+ 8000d42:	f383 8811 	msr	BASEPRI, r3
+}
+ 8000d46:	bf00      	nop
+
+	/* Enable all interrupts */
+	__set_BASEPRI(0);
+
+}
+ 8000d48:	bf00      	nop
+ 8000d4a:	3710      	adds	r7, #16
+ 8000d4c:	46bd      	mov	sp, r7
+ 8000d4e:	bd80      	pop	{r7, pc}
+ 8000d50:	08000a6d 	.word	0x08000a6d
+ 8000d54:	20008228 	.word	0x20008228
+ 8000d58:	200081d8 	.word	0x200081d8
+ 8000d5c:	2000a38c 	.word	0x2000a38c
+ 8000d60:	200081d4 	.word	0x200081d4
+
+08000d64 <RTOS_isSchedulerRunning>:
+ * @brief   Returns scheduler running status
+ * @note
+ * @param   None
+ * @retval  None
+ */
+uint32_t RTOS_isSchedulerRunning(void) {
+ 8000d64:	b480      	push	{r7}
+ 8000d66:	af00      	add	r7, sp, #0
+	return schedulerRunning;
+ 8000d68:	4b03      	ldr	r3, [pc, #12]	; (8000d78 <RTOS_isSchedulerRunning+0x14>)
+ 8000d6a:	681b      	ldr	r3, [r3, #0]
+}
+ 8000d6c:	4618      	mov	r0, r3
+ 8000d6e:	46bd      	mov	sp, r7
+ 8000d70:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 8000d74:	4770      	bx	lr
+ 8000d76:	bf00      	nop
+ 8000d78:	200081d4 	.word	0x200081d4
+
+08000d7c <RTOS_SysTick_Handler>:
+ * @brief   SysTick Handler
+ * @note
+ * @param   None
+ * @retval  None
+ */
+void RTOS_SysTick_Handler(void) {
+ 8000d7c:	b580      	push	{r7, lr}
+ 8000d7e:	af00      	add	r7, sp, #0
+	/* Trigger context switch, set PendSV to pending */
+	SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
+ 8000d80:	4b04      	ldr	r3, [pc, #16]	; (8000d94 <RTOS_SysTick_Handler+0x18>)
+ 8000d82:	685b      	ldr	r3, [r3, #4]
+ 8000d84:	4a03      	ldr	r2, [pc, #12]	; (8000d94 <RTOS_SysTick_Handler+0x18>)
+ 8000d86:	f043 5380 	orr.w	r3, r3, #268435456	; 0x10000000
+ 8000d8a:	6053      	str	r3, [r2, #4]
+
+	/* Refresh the timer list */
+	RTOS_threadRefreshTimerList();
+ 8000d8c:	f000 fd62 	bl	8001854 <RTOS_threadRefreshTimerList>
+}
+ 8000d90:	bf00      	nop
+ 8000d92:	bd80      	pop	{r7, pc}
+ 8000d94:	e000ed00 	.word	0xe000ed00
+
+08000d98 <RTOS_listInit>:
+ * @brief   Initialize thread list
+ * @note
+ * @param   RTOS_list_t *
+ * @retval  None
+ */
+void RTOS_listInit(RTOS_list_t *pList) {
+ 8000d98:	b580      	push	{r7, lr}
+ 8000d9a:	b082      	sub	sp, #8
+ 8000d9c:	af00      	add	r7, sp, #0
+ 8000d9e:	6078      	str	r0, [r7, #4]
+	/* Check input parameters */
+	ASSERT_param(NULL != pList);
+ 8000da0:	687b      	ldr	r3, [r7, #4]
+ 8000da2:	2b00      	cmp	r3, #0
+ 8000da4:	d103      	bne.n	8000dae <RTOS_listInit+0x16>
+ 8000da6:	2169      	movs	r1, #105	; 0x69
+ 8000da8:	480e      	ldr	r0, [pc, #56]	; (8000de4 <RTOS_listInit+0x4c>)
+ 8000daa:	f7ff fdc0 	bl	800092e <assert_failed>
+
+	/* Currently no threads in the list, so the index pointing to the end */
+	pList->pIndex = (RTOS_listItem_t*) &pList->listEnd;
+ 8000dae:	687b      	ldr	r3, [r7, #4]
+ 8000db0:	f103 0208 	add.w	r2, r3, #8
+ 8000db4:	687b      	ldr	r3, [r7, #4]
+ 8000db6:	605a      	str	r2, [r3, #4]
+
+	/* List is empty, so the end pointing to itself */
+	pList->listEnd.pNext = (RTOS_listItem_t*) &pList->listEnd;
+ 8000db8:	687b      	ldr	r3, [r7, #4]
+ 8000dba:	f103 0208 	add.w	r2, r3, #8
+ 8000dbe:	687b      	ldr	r3, [r7, #4]
+ 8000dc0:	60da      	str	r2, [r3, #12]
+	pList->listEnd.pPrev = (RTOS_listItem_t*) &pList->listEnd;
+ 8000dc2:	687b      	ldr	r3, [r7, #4]
+ 8000dc4:	f103 0208 	add.w	r2, r3, #8
+ 8000dc8:	687b      	ldr	r3, [r7, #4]
+ 8000dca:	611a      	str	r2, [r3, #16]
+
+	/* Set item value for the list end */
+	pList->listEnd.itemValue = LIST_END_ITEM_VALUE;
+ 8000dcc:	687b      	ldr	r3, [r7, #4]
+ 8000dce:	f04f 32ff 	mov.w	r2, #4294967295
+ 8000dd2:	609a      	str	r2, [r3, #8]
+
+	/* Number of threads in the list is zero */
+	pList->numOfItems = 0;
+ 8000dd4:	687b      	ldr	r3, [r7, #4]
+ 8000dd6:	2200      	movs	r2, #0
+ 8000dd8:	601a      	str	r2, [r3, #0]
+}
+ 8000dda:	bf00      	nop
+ 8000ddc:	3708      	adds	r7, #8
+ 8000dde:	46bd      	mov	sp, r7
+ 8000de0:	bd80      	pop	{r7, pc}
+ 8000de2:	bf00      	nop
+ 8000de4:	08001b4c 	.word	0x08001b4c
+
+08000de8 <RTOS_listInsertEnd>:
+ * @note  	Our array is more like a stack (Last in first out)
+ * @param   List to add to , item to be added
+ * @retval  void
+ */
+
+void RTOS_listInsertEnd(RTOS_list_t *pList, RTOS_listItem_t *pNewItem) {
+ 8000de8:	b480      	push	{r7}
+ 8000dea:	b083      	sub	sp, #12
+ 8000dec:	af00      	add	r7, sp, #0
+ 8000dee:	6078      	str	r0, [r7, #4]
+ 8000df0:	6039      	str	r1, [r7, #0]
+
+	/* put the index Next as the new item next  */
+	pNewItem->pNext = pList->pIndex->pNext;
+ 8000df2:	687b      	ldr	r3, [r7, #4]
+ 8000df4:	685b      	ldr	r3, [r3, #4]
+ 8000df6:	685a      	ldr	r2, [r3, #4]
+ 8000df8:	683b      	ldr	r3, [r7, #0]
+ 8000dfa:	605a      	str	r2, [r3, #4]
+
+	/* put the index as the new item's previous   */
+	pNewItem->pPrev = pList->pIndex;
+ 8000dfc:	687b      	ldr	r3, [r7, #4]
+ 8000dfe:	685a      	ldr	r2, [r3, #4]
+ 8000e00:	683b      	ldr	r3, [r7, #0]
+ 8000e02:	609a      	str	r2, [r3, #8]
+
+	/* make the index next item previous pointer points to the new item */
+	pList->pIndex->pNext->pPrev = pNewItem;
+ 8000e04:	687b      	ldr	r3, [r7, #4]
+ 8000e06:	685b      	ldr	r3, [r3, #4]
+ 8000e08:	685b      	ldr	r3, [r3, #4]
+ 8000e0a:	683a      	ldr	r2, [r7, #0]
+ 8000e0c:	609a      	str	r2, [r3, #8]
+
+	/* make the index next pointer points to the new item */
+	pList->pIndex->pNext = pNewItem;
+ 8000e0e:	687b      	ldr	r3, [r7, #4]
+ 8000e10:	685b      	ldr	r3, [r3, #4]
+ 8000e12:	683a      	ldr	r2, [r7, #0]
+ 8000e14:	605a      	str	r2, [r3, #4]
+
+	/* make the index of the list the new item */
+	pList->pIndex = pNewItem;
+ 8000e16:	687b      	ldr	r3, [r7, #4]
+ 8000e18:	683a      	ldr	r2, [r7, #0]
+ 8000e1a:	605a      	str	r2, [r3, #4]
+
+	/* Set the list container for the new item */
+	pNewItem->pList = (void*) pList;
+ 8000e1c:	683b      	ldr	r3, [r7, #0]
+ 8000e1e:	687a      	ldr	r2, [r7, #4]
+ 8000e20:	611a      	str	r2, [r3, #16]
+
+	/* Increment number of items inside the list */
+	pList->numOfItems++;
+ 8000e22:	687b      	ldr	r3, [r7, #4]
+ 8000e24:	681b      	ldr	r3, [r3, #0]
+ 8000e26:	1c5a      	adds	r2, r3, #1
+ 8000e28:	687b      	ldr	r3, [r7, #4]
+ 8000e2a:	601a      	str	r2, [r3, #0]
+}
+ 8000e2c:	bf00      	nop
+ 8000e2e:	370c      	adds	r7, #12
+ 8000e30:	46bd      	mov	sp, r7
+ 8000e32:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 8000e36:	4770      	bx	lr
+
+08000e38 <RTOS_listRemove>:
+ * @brief
+ * @note
+ * @param   List which we want to remove from
+ * @retval  void
+ */
+void RTOS_listRemove(RTOS_listItem_t *pRemovedItem) {
+ 8000e38:	b480      	push	{r7}
+ 8000e3a:	b085      	sub	sp, #20
+ 8000e3c:	af00      	add	r7, sp, #0
+ 8000e3e:	6078      	str	r0, [r7, #4]
+
+	/* create a pointer to acess the list of the removed item */
+	RTOS_list_t *pTempList = (RTOS_list_t*) pRemovedItem->pList;
+ 8000e40:	687b      	ldr	r3, [r7, #4]
+ 8000e42:	691b      	ldr	r3, [r3, #16]
+ 8000e44:	60fb      	str	r3, [r7, #12]
+
+	/* Previous of the next item will be the previous of removed item  */
+	pRemovedItem->pNext->pPrev = pRemovedItem->pPrev;
+ 8000e46:	687b      	ldr	r3, [r7, #4]
+ 8000e48:	685b      	ldr	r3, [r3, #4]
+ 8000e4a:	687a      	ldr	r2, [r7, #4]
+ 8000e4c:	6892      	ldr	r2, [r2, #8]
+ 8000e4e:	609a      	str	r2, [r3, #8]
+
+	/* Next of the previous item will be the next of the removed item */
+	pRemovedItem->pPrev->pNext = pRemovedItem->pNext;
+ 8000e50:	687b      	ldr	r3, [r7, #4]
+ 8000e52:	689b      	ldr	r3, [r3, #8]
+ 8000e54:	687a      	ldr	r2, [r7, #4]
+ 8000e56:	6852      	ldr	r2, [r2, #4]
+ 8000e58:	605a      	str	r2, [r3, #4]
+
+	/* check if the removed item is the list index */
+	if (pTempList->pIndex == pRemovedItem) {
+ 8000e5a:	68fb      	ldr	r3, [r7, #12]
+ 8000e5c:	685b      	ldr	r3, [r3, #4]
+ 8000e5e:	687a      	ldr	r2, [r7, #4]
+ 8000e60:	429a      	cmp	r2, r3
+ 8000e62:	d103      	bne.n	8000e6c <RTOS_listRemove+0x34>
+
+		/* if true make the index the previous of the removed item */
+		pTempList->pIndex = pRemovedItem->pPrev;
+ 8000e64:	687b      	ldr	r3, [r7, #4]
+ 8000e66:	689a      	ldr	r2, [r3, #8]
+ 8000e68:	68fb      	ldr	r3, [r7, #12]
+ 8000e6a:	605a      	str	r2, [r3, #4]
+	} else {
+		/* Do nothing its not the index */
+	}
+
+	/* remove the removed item from the current list */
+	pRemovedItem->pList = NULL;
+ 8000e6c:	687b      	ldr	r3, [r7, #4]
+ 8000e6e:	2200      	movs	r2, #0
+ 8000e70:	611a      	str	r2, [r3, #16]
+
+	/* Decrement the */
+	pTempList->numOfItems--;
+ 8000e72:	68fb      	ldr	r3, [r7, #12]
+ 8000e74:	681b      	ldr	r3, [r3, #0]
+ 8000e76:	1e5a      	subs	r2, r3, #1
+ 8000e78:	68fb      	ldr	r3, [r7, #12]
+ 8000e7a:	601a      	str	r2, [r3, #0]
+
+}
+ 8000e7c:	bf00      	nop
+ 8000e7e:	3714      	adds	r7, #20
+ 8000e80:	46bd      	mov	sp, r7
+ 8000e82:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 8000e86:	4770      	bx	lr
+
+08000e88 <RTOS_listInsert>:
+ * @brief   Insert thread item by priority order
+ * @note    first item after the endList item is the highest priority with lowest priority number
+ * @param   RTOS_list_t *, RTOS_listItem_t *
+ * @retval  None
+ */
+void RTOS_listInsert(RTOS_list_t *pList, RTOS_listItem_t *pNewItem) {
+ 8000e88:	b580      	push	{r7, lr}
+ 8000e8a:	b084      	sub	sp, #16
+ 8000e8c:	af00      	add	r7, sp, #0
+ 8000e8e:	6078      	str	r0, [r7, #4]
+ 8000e90:	6039      	str	r1, [r7, #0]
+
+	/* Check input parameters */
+	ASSERT_param(NULL != pList);
+ 8000e92:	687b      	ldr	r3, [r7, #4]
+ 8000e94:	2b00      	cmp	r3, #0
+ 8000e96:	d103      	bne.n	8000ea0 <RTOS_listInsert+0x18>
+ 8000e98:	21c3      	movs	r1, #195	; 0xc3
+ 8000e9a:	481c      	ldr	r0, [pc, #112]	; (8000f0c <RTOS_listInsert+0x84>)
+ 8000e9c:	f7ff fd47 	bl	800092e <assert_failed>
+	ASSERT_param(NULL != pNewItem);
+ 8000ea0:	683b      	ldr	r3, [r7, #0]
+ 8000ea2:	2b00      	cmp	r3, #0
+ 8000ea4:	d103      	bne.n	8000eae <RTOS_listInsert+0x26>
+ 8000ea6:	21c4      	movs	r1, #196	; 0xc4
+ 8000ea8:	4818      	ldr	r0, [pc, #96]	; (8000f0c <RTOS_listInsert+0x84>)
+ 8000eaa:	f7ff fd40 	bl	800092e <assert_failed>
+
+	/*TRY TO USE */
+
+	/* Temp for the insert index */
+	RTOS_listItem_t *pInsertIndex = (RTOS_listItem_t*) &pList->listEnd;
+ 8000eae:	687b      	ldr	r3, [r7, #4]
+ 8000eb0:	3308      	adds	r3, #8
+ 8000eb2:	60fb      	str	r3, [r7, #12]
+
+	/* Get insert index, find the high item value */
+	/* less item value means heigher priority */
+	while ((pInsertIndex->pNext != (RTOS_listItem_t*) &pList->listEnd)
+ 8000eb4:	e002      	b.n	8000ebc <RTOS_listInsert+0x34>
+			&& (pInsertIndex->pNext->itemValue <= pNewItem->itemValue)) {
+		pInsertIndex = pInsertIndex->pNext;
+ 8000eb6:	68fb      	ldr	r3, [r7, #12]
+ 8000eb8:	685b      	ldr	r3, [r3, #4]
+ 8000eba:	60fb      	str	r3, [r7, #12]
+	while ((pInsertIndex->pNext != (RTOS_listItem_t*) &pList->listEnd)
+ 8000ebc:	68fb      	ldr	r3, [r7, #12]
+ 8000ebe:	685a      	ldr	r2, [r3, #4]
+ 8000ec0:	687b      	ldr	r3, [r7, #4]
+ 8000ec2:	3308      	adds	r3, #8
+ 8000ec4:	429a      	cmp	r2, r3
+ 8000ec6:	d006      	beq.n	8000ed6 <RTOS_listInsert+0x4e>
+			&& (pInsertIndex->pNext->itemValue <= pNewItem->itemValue)) {
+ 8000ec8:	68fb      	ldr	r3, [r7, #12]
+ 8000eca:	685b      	ldr	r3, [r3, #4]
+ 8000ecc:	681a      	ldr	r2, [r3, #0]
+ 8000ece:	683b      	ldr	r3, [r7, #0]
+ 8000ed0:	681b      	ldr	r3, [r3, #0]
+ 8000ed2:	429a      	cmp	r2, r3
+ 8000ed4:	d9ef      	bls.n	8000eb6 <RTOS_listInsert+0x2e>
+	}
+
+	/* Connect the new item with insert index */
+	  pNewItem->pNext = pInsertIndex->pNext;
+ 8000ed6:	68fb      	ldr	r3, [r7, #12]
+ 8000ed8:	685a      	ldr	r2, [r3, #4]
+ 8000eda:	683b      	ldr	r3, [r7, #0]
+ 8000edc:	605a      	str	r2, [r3, #4]
+	  pNewItem->pPrev = pInsertIndex;
+ 8000ede:	683b      	ldr	r3, [r7, #0]
+ 8000ee0:	68fa      	ldr	r2, [r7, #12]
+ 8000ee2:	609a      	str	r2, [r3, #8]
+	  pInsertIndex->pNext->pPrev = pNewItem;
+ 8000ee4:	68fb      	ldr	r3, [r7, #12]
+ 8000ee6:	685b      	ldr	r3, [r3, #4]
+ 8000ee8:	683a      	ldr	r2, [r7, #0]
+ 8000eea:	609a      	str	r2, [r3, #8]
+	  pInsertIndex->pNext = pNewItem;
+ 8000eec:	68fb      	ldr	r3, [r7, #12]
+ 8000eee:	683a      	ldr	r2, [r7, #0]
+ 8000ef0:	605a      	str	r2, [r3, #4]
+
+	  /* Set the list container for the new item */
+	  pNewItem->pList = (void *) pList;
+ 8000ef2:	683b      	ldr	r3, [r7, #0]
+ 8000ef4:	687a      	ldr	r2, [r7, #4]
+ 8000ef6:	611a      	str	r2, [r3, #16]
+
+	  /* Increment number of items in the list */
+	  pList->numOfItems++;
+ 8000ef8:	687b      	ldr	r3, [r7, #4]
+ 8000efa:	681b      	ldr	r3, [r3, #0]
+ 8000efc:	1c5a      	adds	r2, r3, #1
+ 8000efe:	687b      	ldr	r3, [r7, #4]
+ 8000f00:	601a      	str	r2, [r3, #0]
+}
+ 8000f02:	bf00      	nop
+ 8000f04:	3710      	adds	r7, #16
+ 8000f06:	46bd      	mov	sp, r7
+ 8000f08:	bd80      	pop	{r7, pc}
+ 8000f0a:	bf00      	nop
+ 8000f0c:	08001b4c 	.word	0x08001b4c
+
+08000f10 <checkWaitingThreads>:
+ * @brief   Check if threads are waiting for a new data
+ * @note
+ * @param   RTOS_mailbox_t *
+ * @retval  None
+ */
+static void checkWaitingThreads(RTOS_mailbox_t *pMailbox) {
+ 8000f10:	b580      	push	{r7, lr}
+ 8000f12:	b084      	sub	sp, #16
+ 8000f14:	af00      	add	r7, sp, #0
+ 8000f16:	6078      	str	r0, [r7, #4]
+	/* Check input parameters */
+	ASSERT_param(NULL != pMailbox);
+ 8000f18:	687b      	ldr	r3, [r7, #4]
+ 8000f1a:	2b00      	cmp	r3, #0
+ 8000f1c:	d103      	bne.n	8000f26 <checkWaitingThreads+0x16>
+ 8000f1e:	2160      	movs	r1, #96	; 0x60
+ 8000f20:	4813      	ldr	r0, [pc, #76]	; (8000f70 <checkWaitingThreads+0x60>)
+ 8000f22:	f7ff fd04 	bl	800092e <assert_failed>
+
+	/* Pointer to the unblocked thread */
+	RTOS_thread_t *pThread;
+
+	/* Check if threads are waiting for the data */
+	if (0 < pMailbox->waitingList.numOfItems) {
+ 8000f26:	687b      	ldr	r3, [r7, #4]
+ 8000f28:	69db      	ldr	r3, [r3, #28]
+ 8000f2a:	2b00      	cmp	r3, #0
+ 8000f2c:	d01b      	beq.n	8000f66 <checkWaitingThreads+0x56>
+		/* Get first one */
+		pThread = pMailbox->waitingList.listEnd.pNext->pThread;
+ 8000f2e:	687b      	ldr	r3, [r7, #4]
+ 8000f30:	6a9b      	ldr	r3, [r3, #40]	; 0x28
+ 8000f32:	68db      	ldr	r3, [r3, #12]
+ 8000f34:	60fb      	str	r3, [r7, #12]
+
+		/* Check returned thread */
+		ASSERT_param(NULL != pThread);
+ 8000f36:	68fb      	ldr	r3, [r7, #12]
+ 8000f38:	2b00      	cmp	r3, #0
+ 8000f3a:	d103      	bne.n	8000f44 <checkWaitingThreads+0x34>
+ 8000f3c:	216b      	movs	r1, #107	; 0x6b
+ 8000f3e:	480c      	ldr	r0, [pc, #48]	; (8000f70 <checkWaitingThreads+0x60>)
+ 8000f40:	f7ff fcf5 	bl	800092e <assert_failed>
+
+		/* Remove the returned thread item from the waiting list */
+		RTOS_listRemove(&pThread->eventListItem);
+ 8000f44:	68fb      	ldr	r3, [r7, #12]
+ 8000f46:	3334      	adds	r3, #52	; 0x34
+ 8000f48:	4618      	mov	r0, r3
+ 8000f4a:	f7ff ff75 	bl	8000e38 <RTOS_listRemove>
+
+		/* Check if the generic item in any list */
+		if (NULL != pThread->genericListItem.pList) {
+ 8000f4e:	68fb      	ldr	r3, [r7, #12]
+ 8000f50:	6b1b      	ldr	r3, [r3, #48]	; 0x30
+ 8000f52:	2b00      	cmp	r3, #0
+ 8000f54:	d004      	beq.n	8000f60 <checkWaitingThreads+0x50>
+			/* Remove the generic item from the current list,
+			 * as it will be inserted into ready list */
+			RTOS_listRemove(&pThread->genericListItem);
+ 8000f56:	68fb      	ldr	r3, [r7, #12]
+ 8000f58:	3320      	adds	r3, #32
+ 8000f5a:	4618      	mov	r0, r3
+ 8000f5c:	f7ff ff6c 	bl	8000e38 <RTOS_listRemove>
+		} else {
+			/* Do nothing, generic item is not in any list */
+		}
+
+		/* Add the returned thread into ready list */
+		RTOS_threadAddToReadyList(pThread);
+ 8000f60:	68f8      	ldr	r0, [r7, #12]
+ 8000f62:	f000 fb91 	bl	8001688 <RTOS_threadAddToReadyList>
+	} else {
+		/* List is empty */
+	}
+}
+ 8000f66:	bf00      	nop
+ 8000f68:	3710      	adds	r7, #16
+ 8000f6a:	46bd      	mov	sp, r7
+ 8000f6c:	bd80      	pop	{r7, pc}
+ 8000f6e:	bf00      	nop
+ 8000f70:	08001b6c 	.word	0x08001b6c
+
+08000f74 <blockCurrentThread>:
+ * @brief   Block current thread when buffer is full or empty
+ * @note
+ * @param   RTOS_mailbox_t *
+ * @retval  None
+ */
+static void blockCurrentThread(RTOS_mailbox_t *pMailbox) {
+ 8000f74:	b580      	push	{r7, lr}
+ 8000f76:	b084      	sub	sp, #16
+ 8000f78:	af00      	add	r7, sp, #0
+ 8000f7a:	6078      	str	r0, [r7, #4]
+	/* Pointer to the current running thread */
+	RTOS_thread_t *pRunningThread;
+
+	/* Get current running thread */
+	pRunningThread = RTOS_threadGetRunning();
+ 8000f7c:	f000 fc1c 	bl	80017b8 <RTOS_threadGetRunning>
+ 8000f80:	60f8      	str	r0, [r7, #12]
+
+	/* Remove current thread from ready list */
+	RTOS_listRemove(&pRunningThread->genericListItem);
+ 8000f82:	68fb      	ldr	r3, [r7, #12]
+ 8000f84:	3320      	adds	r3, #32
+ 8000f86:	4618      	mov	r0, r3
+ 8000f88:	f7ff ff56 	bl	8000e38 <RTOS_listRemove>
+
+	/* Put current thread into the waiting list */
+	RTOS_listInsert(&pMailbox->waitingList, &pRunningThread->eventListItem);
+ 8000f8c:	687b      	ldr	r3, [r7, #4]
+ 8000f8e:	f103 021c 	add.w	r2, r3, #28
+ 8000f92:	68fb      	ldr	r3, [r7, #12]
+ 8000f94:	3334      	adds	r3, #52	; 0x34
+ 8000f96:	4619      	mov	r1, r3
+ 8000f98:	4610      	mov	r0, r2
+ 8000f9a:	f7ff ff75 	bl	8000e88 <RTOS_listInsert>
+
+	/* Trigger context switch, set PendSV to pending */
+	SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
+ 8000f9e:	4b05      	ldr	r3, [pc, #20]	; (8000fb4 <blockCurrentThread+0x40>)
+ 8000fa0:	685b      	ldr	r3, [r3, #4]
+ 8000fa2:	4a04      	ldr	r2, [pc, #16]	; (8000fb4 <blockCurrentThread+0x40>)
+ 8000fa4:	f043 5380 	orr.w	r3, r3, #268435456	; 0x10000000
+ 8000fa8:	6053      	str	r3, [r2, #4]
+}
+ 8000faa:	bf00      	nop
+ 8000fac:	3710      	adds	r7, #16
+ 8000fae:	46bd      	mov	sp, r7
+ 8000fb0:	bd80      	pop	{r7, pc}
+ 8000fb2:	bf00      	nop
+ 8000fb4:	e000ed00 	.word	0xe000ed00
+
+08000fb8 <RTOS_mailboxCreate>:
+ * @note
+ * @param   RTOS_mailbox_t *, void *, uint32_t, uint32_t
+ * @retval  None
+ */
+void RTOS_mailboxCreate(RTOS_mailbox_t *pMailbox, void *pBuffer,
+		uint32_t bufferLength, uint32_t messageSize) {
+ 8000fb8:	b580      	push	{r7, lr}
+ 8000fba:	b084      	sub	sp, #16
+ 8000fbc:	af00      	add	r7, sp, #0
+ 8000fbe:	60f8      	str	r0, [r7, #12]
+ 8000fc0:	60b9      	str	r1, [r7, #8]
+ 8000fc2:	607a      	str	r2, [r7, #4]
+ 8000fc4:	603b      	str	r3, [r7, #0]
+
+	/* Check input parameters */
+	ASSERT_param(NULL != pMailbox);
+ 8000fc6:	68fb      	ldr	r3, [r7, #12]
+ 8000fc8:	2b00      	cmp	r3, #0
+ 8000fca:	d103      	bne.n	8000fd4 <RTOS_mailboxCreate+0x1c>
+ 8000fcc:	21ae      	movs	r1, #174	; 0xae
+ 8000fce:	4822      	ldr	r0, [pc, #136]	; (8001058 <RTOS_mailboxCreate+0xa0>)
+ 8000fd0:	f7ff fcad 	bl	800092e <assert_failed>
+	ASSERT_param(NULL != pBuffer);
+ 8000fd4:	68bb      	ldr	r3, [r7, #8]
+ 8000fd6:	2b00      	cmp	r3, #0
+ 8000fd8:	d103      	bne.n	8000fe2 <RTOS_mailboxCreate+0x2a>
+ 8000fda:	21af      	movs	r1, #175	; 0xaf
+ 8000fdc:	481e      	ldr	r0, [pc, #120]	; (8001058 <RTOS_mailboxCreate+0xa0>)
+ 8000fde:	f7ff fca6 	bl	800092e <assert_failed>
+	ASSERT_param(0 != bufferLength);
+ 8000fe2:	687b      	ldr	r3, [r7, #4]
+ 8000fe4:	2b00      	cmp	r3, #0
+ 8000fe6:	d103      	bne.n	8000ff0 <RTOS_mailboxCreate+0x38>
+ 8000fe8:	21b0      	movs	r1, #176	; 0xb0
+ 8000fea:	481b      	ldr	r0, [pc, #108]	; (8001058 <RTOS_mailboxCreate+0xa0>)
+ 8000fec:	f7ff fc9f 	bl	800092e <assert_failed>
+	ASSERT_param(
+ 8000ff0:	683b      	ldr	r3, [r7, #0]
+ 8000ff2:	2b01      	cmp	r3, #1
+ 8000ff4:	d009      	beq.n	800100a <RTOS_mailboxCreate+0x52>
+ 8000ff6:	683b      	ldr	r3, [r7, #0]
+ 8000ff8:	2b02      	cmp	r3, #2
+ 8000ffa:	d006      	beq.n	800100a <RTOS_mailboxCreate+0x52>
+ 8000ffc:	683b      	ldr	r3, [r7, #0]
+ 8000ffe:	2b04      	cmp	r3, #4
+ 8001000:	d003      	beq.n	800100a <RTOS_mailboxCreate+0x52>
+ 8001002:	21b1      	movs	r1, #177	; 0xb1
+ 8001004:	4814      	ldr	r0, [pc, #80]	; (8001058 <RTOS_mailboxCreate+0xa0>)
+ 8001006:	f7ff fc92 	bl	800092e <assert_failed>
+			(1 == messageSize) || (2 == messageSize) || (4 == messageSize));
+
+	/*Set mailbox buffer start and end*/
+	pMailbox->pStart = (int8_t*) pBuffer;
+ 800100a:	68fb      	ldr	r3, [r7, #12]
+ 800100c:	68ba      	ldr	r2, [r7, #8]
+ 800100e:	601a      	str	r2, [r3, #0]
+
+	/* the end of the mail box would be points to an address after the last element ,
+	 *  so if we have buffer of 10 items pEnd will points to buffer[10] not buffer[9] */
+	pMailbox->pEnd = pMailbox->pStart + (bufferLength * messageSize);
+ 8001010:	68fb      	ldr	r3, [r7, #12]
+ 8001012:	681a      	ldr	r2, [r3, #0]
+ 8001014:	687b      	ldr	r3, [r7, #4]
+ 8001016:	6839      	ldr	r1, [r7, #0]
+ 8001018:	fb01 f303 	mul.w	r3, r1, r3
+ 800101c:	441a      	add	r2, r3
+ 800101e:	68fb      	ldr	r3, [r7, #12]
+ 8001020:	605a      	str	r2, [r3, #4]
+
+	/* Initialize read and write indices */
+	pMailbox->pReadIndex = pMailbox->pStart;
+ 8001022:	68fb      	ldr	r3, [r7, #12]
+ 8001024:	681a      	ldr	r2, [r3, #0]
+ 8001026:	68fb      	ldr	r3, [r7, #12]
+ 8001028:	609a      	str	r2, [r3, #8]
+	pMailbox->pWriteIndex = pMailbox->pStart;
+ 800102a:	68fb      	ldr	r3, [r7, #12]
+ 800102c:	681a      	ldr	r2, [r3, #0]
+ 800102e:	68fb      	ldr	r3, [r7, #12]
+ 8001030:	60da      	str	r2, [r3, #12]
+
+	/* Set buffer length and message size */
+	pMailbox->bufferLength = bufferLength;
+ 8001032:	68fb      	ldr	r3, [r7, #12]
+ 8001034:	687a      	ldr	r2, [r7, #4]
+ 8001036:	611a      	str	r2, [r3, #16]
+	pMailbox->messageSize = messageSize;
+ 8001038:	68fb      	ldr	r3, [r7, #12]
+ 800103a:	683a      	ldr	r2, [r7, #0]
+ 800103c:	615a      	str	r2, [r3, #20]
+
+	/* Initialize current number of messages */
+	pMailbox->messagesNum = 0;
+ 800103e:	68fb      	ldr	r3, [r7, #12]
+ 8001040:	2200      	movs	r2, #0
+ 8001042:	619a      	str	r2, [r3, #24]
+
+	/* Initialize mailbox waiting list */
+	RTOS_listInit(&pMailbox->waitingList);
+ 8001044:	68fb      	ldr	r3, [r7, #12]
+ 8001046:	331c      	adds	r3, #28
+ 8001048:	4618      	mov	r0, r3
+ 800104a:	f7ff fea5 	bl	8000d98 <RTOS_listInit>
+
+}
+ 800104e:	bf00      	nop
+ 8001050:	3710      	adds	r7, #16
+ 8001052:	46bd      	mov	sp, r7
+ 8001054:	bd80      	pop	{r7, pc}
+ 8001056:	bf00      	nop
+ 8001058:	08001b6c 	.word	0x08001b6c
+
+0800105c <RTOS_mailboxWrite>:
+ * @note
+ * @param   RTOS_mailbox_t *, int32_t, const void * const
+ * @retval  RTOS_return_t
+ */
+RTOS_return_t RTOS_mailboxWrite(RTOS_mailbox_t *pMailbox, int32_t waitTime,
+		const void *const pMessage) {
+ 800105c:	b580      	push	{r7, lr}
+ 800105e:	b086      	sub	sp, #24
+ 8001060:	af00      	add	r7, sp, #0
+ 8001062:	60f8      	str	r0, [r7, #12]
+ 8001064:	60b9      	str	r1, [r7, #8]
+ 8001066:	607a      	str	r2, [r7, #4]
+
+	/* Check input parameters */
+	ASSERT_param(NULL != pMailbox);
+ 8001068:	68fb      	ldr	r3, [r7, #12]
+ 800106a:	2b00      	cmp	r3, #0
+ 800106c:	d103      	bne.n	8001076 <RTOS_mailboxWrite+0x1a>
+ 800106e:	21d4      	movs	r1, #212	; 0xd4
+ 8001070:	4829      	ldr	r0, [pc, #164]	; (8001118 <RTOS_mailboxWrite+0xbc>)
+ 8001072:	f7ff fc5c 	bl	800092e <assert_failed>
+	ASSERT_param(WAIT_INDEFINITELY <= waitTime);
+ 8001076:	68bb      	ldr	r3, [r7, #8]
+ 8001078:	f1b3 3fff 	cmp.w	r3, #4294967295
+ 800107c:	da03      	bge.n	8001086 <RTOS_mailboxWrite+0x2a>
+ 800107e:	21d5      	movs	r1, #213	; 0xd5
+ 8001080:	4825      	ldr	r0, [pc, #148]	; (8001118 <RTOS_mailboxWrite+0xbc>)
+ 8001082:	f7ff fc54 	bl	800092e <assert_failed>
+	ASSERT_param(NULL != pMessage);
+ 8001086:	687b      	ldr	r3, [r7, #4]
+ 8001088:	2b00      	cmp	r3, #0
+ 800108a:	d103      	bne.n	8001094 <RTOS_mailboxWrite+0x38>
+ 800108c:	21d6      	movs	r1, #214	; 0xd6
+ 800108e:	4822      	ldr	r0, [pc, #136]	; (8001118 <RTOS_mailboxWrite+0xbc>)
+ 8001090:	f7ff fc4d 	bl	800092e <assert_failed>
+
+	/* Return status */
+	RTOS_return_t returnStatus = RTOS_FAILURE;
+ 8001094:	2301      	movs	r3, #1
+ 8001096:	75fb      	strb	r3, [r7, #23]
+
+	/* Check if there is a free place to write */
+	if (pMailbox->bufferLength > pMailbox->messagesNum) {
+ 8001098:	68fb      	ldr	r3, [r7, #12]
+ 800109a:	691a      	ldr	r2, [r3, #16]
+ 800109c:	68fb      	ldr	r3, [r7, #12]
+ 800109e:	699b      	ldr	r3, [r3, #24]
+ 80010a0:	429a      	cmp	r2, r3
+ 80010a2:	d922      	bls.n	80010ea <RTOS_mailboxWrite+0x8e>
+
+		/* add the message to the mail box */
+		memcpy((void*) pMailbox->pWriteIndex, pMessage, pMailbox->messageSize);
+ 80010a4:	68fb      	ldr	r3, [r7, #12]
+ 80010a6:	68d8      	ldr	r0, [r3, #12]
+ 80010a8:	68fb      	ldr	r3, [r7, #12]
+ 80010aa:	695b      	ldr	r3, [r3, #20]
+ 80010ac:	461a      	mov	r2, r3
+ 80010ae:	6879      	ldr	r1, [r7, #4]
+ 80010b0:	f000 fd12 	bl	8001ad8 <memcpy>
+
+		/* Increment write index to point to the next message */
+		pMailbox->pWriteIndex += pMailbox->messageSize;
+ 80010b4:	68fb      	ldr	r3, [r7, #12]
+ 80010b6:	68da      	ldr	r2, [r3, #12]
+ 80010b8:	68fb      	ldr	r3, [r7, #12]
+ 80010ba:	695b      	ldr	r3, [r3, #20]
+ 80010bc:	441a      	add	r2, r3
+ 80010be:	68fb      	ldr	r3, [r7, #12]
+ 80010c0:	60da      	str	r2, [r3, #12]
+
+		/* Check if the buffer is written until the end */
+		if (pMailbox->pWriteIndex >= pMailbox->pEnd) {
+ 80010c2:	68fb      	ldr	r3, [r7, #12]
+ 80010c4:	68da      	ldr	r2, [r3, #12]
+ 80010c6:	68fb      	ldr	r3, [r7, #12]
+ 80010c8:	685b      	ldr	r3, [r3, #4]
+ 80010ca:	429a      	cmp	r2, r3
+ 80010cc:	d303      	bcc.n	80010d6 <RTOS_mailboxWrite+0x7a>
+
+			/* Start again from the beginning of the buffer */
+			pMailbox->pWriteIndex = pMailbox->pStart;
+ 80010ce:	68fb      	ldr	r3, [r7, #12]
+ 80010d0:	681a      	ldr	r2, [r3, #0]
+ 80010d2:	68fb      	ldr	r3, [r7, #12]
+ 80010d4:	60da      	str	r2, [r3, #12]
+		} else {
+			/* it still didn't reach the end of buffer*/
+		}
+
+		/*increase number of messages in mailbox*/
+		pMailbox->messagesNum++;
+ 80010d6:	68fb      	ldr	r3, [r7, #12]
+ 80010d8:	699b      	ldr	r3, [r3, #24]
+ 80010da:	1c5a      	adds	r2, r3, #1
+ 80010dc:	68fb      	ldr	r3, [r7, #12]
+ 80010de:	619a      	str	r2, [r3, #24]
+
+		/* Check waiting threads */
+		checkWaitingThreads(pMailbox);
+ 80010e0:	68f8      	ldr	r0, [r7, #12]
+ 80010e2:	f7ff ff15 	bl	8000f10 <checkWaitingThreads>
+
+		/* Set the return status to succeeded  */
+		returnStatus = RTOS_SUCCESS;
+ 80010e6:	2300      	movs	r3, #0
+ 80010e8:	75fb      	strb	r3, [r7, #23]
+
+	} else {
+		/* Buffer is Full */
+	}
+	/* check if the buffer was full and the waiting flag is set */
+	if ((NO_WAIT != waitTime) && (RTOS_SUCCESS != returnStatus)) {
+ 80010ea:	68bb      	ldr	r3, [r7, #8]
+ 80010ec:	2b00      	cmp	r3, #0
+ 80010ee:	d00e      	beq.n	800110e <RTOS_mailboxWrite+0xb2>
+ 80010f0:	7dfb      	ldrb	r3, [r7, #23]
+ 80010f2:	2b00      	cmp	r3, #0
+ 80010f4:	d00b      	beq.n	800110e <RTOS_mailboxWrite+0xb2>
+
+		/* use the blocking function  */
+		/* Block current thread */
+		blockCurrentThread(pMailbox);
+ 80010f6:	68f8      	ldr	r0, [r7, #12]
+ 80010f8:	f7ff ff3c 	bl	8000f74 <blockCurrentThread>
+
+		/* Check waiting time */
+		if (NO_WAIT < waitTime) {
+ 80010fc:	68bb      	ldr	r3, [r7, #8]
+ 80010fe:	2b00      	cmp	r3, #0
+ 8001100:	dd03      	ble.n	800110a <RTOS_mailboxWrite+0xae>
+			/* Waiting time configured, add current to the timer list */
+			RTOS_threadAddRunningToTimerList(waitTime);
+ 8001102:	68bb      	ldr	r3, [r7, #8]
+ 8001104:	4618      	mov	r0, r3
+ 8001106:	f000 fb63 	bl	80017d0 <RTOS_threadAddRunningToTimerList>
+		} else {
+			/* Thread will wait indefinitely, do nothing */
+		}
+
+		/* Set the return status to failed and blocked  */
+		returnStatus = RTOS_CONTEXT_SWITCH_TRIGGERED;
+ 800110a:	2302      	movs	r3, #2
+ 800110c:	75fb      	strb	r3, [r7, #23]
+
+	} else {
+		/*  return status to failed and un blocked  */
+	}
+
+	return returnStatus;
+ 800110e:	7dfb      	ldrb	r3, [r7, #23]
+}
+ 8001110:	4618      	mov	r0, r3
+ 8001112:	3718      	adds	r7, #24
+ 8001114:	46bd      	mov	sp, r7
+ 8001116:	bd80      	pop	{r7, pc}
+ 8001118:	08001b6c 	.word	0x08001b6c
+
+0800111c <RTOS_mailboxRead>:
+ * @note
+ * @param   RTOS_mailbox_t *, int32_t, void * const
+ * @retval  uint32_t
+ */
+RTOS_return_t RTOS_mailboxRead(RTOS_mailbox_t *pMailbox, int32_t waitTime,
+		void *const pMessage) {
+ 800111c:	b580      	push	{r7, lr}
+ 800111e:	b086      	sub	sp, #24
+ 8001120:	af00      	add	r7, sp, #0
+ 8001122:	60f8      	str	r0, [r7, #12]
+ 8001124:	60b9      	str	r1, [r7, #8]
+ 8001126:	607a      	str	r2, [r7, #4]
+
+	/* Check input parameters */
+	ASSERT_param(NULL != pMailbox);
+ 8001128:	68fb      	ldr	r3, [r7, #12]
+ 800112a:	2b00      	cmp	r3, #0
+ 800112c:	d104      	bne.n	8001138 <RTOS_mailboxRead+0x1c>
+ 800112e:	f44f 718e 	mov.w	r1, #284	; 0x11c
+ 8001132:	482a      	ldr	r0, [pc, #168]	; (80011dc <RTOS_mailboxRead+0xc0>)
+ 8001134:	f7ff fbfb 	bl	800092e <assert_failed>
+	ASSERT_param(WAIT_INDEFINITELY <= waitTime);
+ 8001138:	68bb      	ldr	r3, [r7, #8]
+ 800113a:	f1b3 3fff 	cmp.w	r3, #4294967295
+ 800113e:	da04      	bge.n	800114a <RTOS_mailboxRead+0x2e>
+ 8001140:	f240 111d 	movw	r1, #285	; 0x11d
+ 8001144:	4825      	ldr	r0, [pc, #148]	; (80011dc <RTOS_mailboxRead+0xc0>)
+ 8001146:	f7ff fbf2 	bl	800092e <assert_failed>
+	ASSERT_param(NULL != pMessage);
+ 800114a:	687b      	ldr	r3, [r7, #4]
+ 800114c:	2b00      	cmp	r3, #0
+ 800114e:	d104      	bne.n	800115a <RTOS_mailboxRead+0x3e>
+ 8001150:	f44f 718f 	mov.w	r1, #286	; 0x11e
+ 8001154:	4821      	ldr	r0, [pc, #132]	; (80011dc <RTOS_mailboxRead+0xc0>)
+ 8001156:	f7ff fbea 	bl	800092e <assert_failed>
+
+	/* Return status */
+	RTOS_return_t returnStatus = RTOS_FAILURE;
+ 800115a:	2301      	movs	r3, #1
+ 800115c:	75fb      	strb	r3, [r7, #23]
+
+	/*  */
+
+	/* check if the buffer has items  */
+	if (0 < pMailbox->messagesNum) {
+ 800115e:	68fb      	ldr	r3, [r7, #12]
+ 8001160:	699b      	ldr	r3, [r3, #24]
+ 8001162:	2b00      	cmp	r3, #0
+ 8001164:	d022      	beq.n	80011ac <RTOS_mailboxRead+0x90>
+
+		/* copy the message */
+		memcpy(pMessage, (void*) pMailbox->pReadIndex, pMailbox->messageSize);
+ 8001166:	68fb      	ldr	r3, [r7, #12]
+ 8001168:	6899      	ldr	r1, [r3, #8]
+ 800116a:	68fb      	ldr	r3, [r7, #12]
+ 800116c:	695b      	ldr	r3, [r3, #20]
+ 800116e:	461a      	mov	r2, r3
+ 8001170:	6878      	ldr	r0, [r7, #4]
+ 8001172:	f000 fcb1 	bl	8001ad8 <memcpy>
+
+		/* Increment Read index to point to the next message */
+
+		pMailbox->pReadIndex += pMailbox->messageSize;
+ 8001176:	68fb      	ldr	r3, [r7, #12]
+ 8001178:	689a      	ldr	r2, [r3, #8]
+ 800117a:	68fb      	ldr	r3, [r7, #12]
+ 800117c:	695b      	ldr	r3, [r3, #20]
+ 800117e:	441a      	add	r2, r3
+ 8001180:	68fb      	ldr	r3, [r7, #12]
+ 8001182:	609a      	str	r2, [r3, #8]
+
+		/* check if we reached to the end of the buffer  */
+		if (pMailbox->pReadIndex >= pMailbox->pEnd) {
+ 8001184:	68fb      	ldr	r3, [r7, #12]
+ 8001186:	689a      	ldr	r2, [r3, #8]
+ 8001188:	68fb      	ldr	r3, [r7, #12]
+ 800118a:	685b      	ldr	r3, [r3, #4]
+ 800118c:	429a      	cmp	r2, r3
+ 800118e:	d303      	bcc.n	8001198 <RTOS_mailboxRead+0x7c>
+			/* Start over */
+			pMailbox->pReadIndex = pMailbox->pStart;
+ 8001190:	68fb      	ldr	r3, [r7, #12]
+ 8001192:	681a      	ldr	r2, [r3, #0]
+ 8001194:	68fb      	ldr	r3, [r7, #12]
+ 8001196:	609a      	str	r2, [r3, #8]
+		} else {
+			/* we didn't reach the end */
+		}
+
+		/* Decrement the number of messages */
+		pMailbox->messagesNum--;
+ 8001198:	68fb      	ldr	r3, [r7, #12]
+ 800119a:	699b      	ldr	r3, [r3, #24]
+ 800119c:	1e5a      	subs	r2, r3, #1
+ 800119e:	68fb      	ldr	r3, [r7, #12]
+ 80011a0:	619a      	str	r2, [r3, #24]
+
+		/* Check waiting threads */
+		checkWaitingThreads(pMailbox);
+ 80011a2:	68f8      	ldr	r0, [r7, #12]
+ 80011a4:	f7ff feb4 	bl	8000f10 <checkWaitingThreads>
+
+		/* New message is removed from the buffer, return OK */
+		returnStatus = RTOS_SUCCESS;
+ 80011a8:	2300      	movs	r3, #0
+ 80011aa:	75fb      	strb	r3, [r7, #23]
+	} else {
+		/* buffer is empty , there is nothing to read */
+	}
+
+	/* Check waiting flag and return status */
+	if ((NO_WAIT == waitTime) && (RTOS_SUCCESS != returnStatus)) {
+ 80011ac:	68bb      	ldr	r3, [r7, #8]
+ 80011ae:	2b00      	cmp	r3, #0
+ 80011b0:	d10e      	bne.n	80011d0 <RTOS_mailboxRead+0xb4>
+ 80011b2:	7dfb      	ldrb	r3, [r7, #23]
+ 80011b4:	2b00      	cmp	r3, #0
+ 80011b6:	d00b      	beq.n	80011d0 <RTOS_mailboxRead+0xb4>
+
+		/* Block current thread */
+		blockCurrentThread(pMailbox);
+ 80011b8:	68f8      	ldr	r0, [r7, #12]
+ 80011ba:	f7ff fedb 	bl	8000f74 <blockCurrentThread>
+
+		/* Check waiting time */
+		if (NO_WAIT < waitTime) {
+ 80011be:	68bb      	ldr	r3, [r7, #8]
+ 80011c0:	2b00      	cmp	r3, #0
+ 80011c2:	dd03      	ble.n	80011cc <RTOS_mailboxRead+0xb0>
+			/* Waiting time configured, add current to the timer list */
+			RTOS_threadAddRunningToTimerList(waitTime);
+ 80011c4:	68bb      	ldr	r3, [r7, #8]
+ 80011c6:	4618      	mov	r0, r3
+ 80011c8:	f000 fb02 	bl	80017d0 <RTOS_threadAddRunningToTimerList>
+		} else {
+			/* Thread will wait indefinitely, do nothing */
+		}
+
+		/* Return to SVC as indication of context switch */
+		returnStatus = RTOS_CONTEXT_SWITCH_TRIGGERED;
+ 80011cc:	2302      	movs	r3, #2
+ 80011ce:	75fb      	strb	r3, [r7, #23]
+	} else {
+		/* No blocking required, do nothing */
+
+	}
+
+	return returnStatus;
+ 80011d0:	7dfb      	ldrb	r3, [r7, #23]
+
+}
+ 80011d2:	4618      	mov	r0, r3
+ 80011d4:	3718      	adds	r7, #24
+ 80011d6:	46bd      	mov	sp, r7
+ 80011d8:	bd80      	pop	{r7, pc}
+ 80011da:	bf00      	nop
+ 80011dc:	08001b6c 	.word	0x08001b6c
+
+080011e0 <RTOS_mutexCreate>:
+ * @brief   Mutex create
+ * @note
+ * @param   RTOS_mutex_t *
+ * @retval  None
+ */
+void RTOS_mutexCreate(RTOS_mutex_t *pMutex, uint32_t initialValue) {
+ 80011e0:	b580      	push	{r7, lr}
+ 80011e2:	b082      	sub	sp, #8
+ 80011e4:	af00      	add	r7, sp, #0
+ 80011e6:	6078      	str	r0, [r7, #4]
+ 80011e8:	6039      	str	r1, [r7, #0]
+
+	/* check input parameters */
+	ASSERT_param(NULL!=pMutex);
+ 80011ea:	687b      	ldr	r3, [r7, #4]
+ 80011ec:	2b00      	cmp	r3, #0
+ 80011ee:	d103      	bne.n	80011f8 <RTOS_mutexCreate+0x18>
+ 80011f0:	2166      	movs	r1, #102	; 0x66
+ 80011f2:	480e      	ldr	r0, [pc, #56]	; (800122c <RTOS_mutexCreate+0x4c>)
+ 80011f4:	f7ff fb9b 	bl	800092e <assert_failed>
+	ASSERT_param((initialValue == 0) || (initialValue == 1));
+ 80011f8:	683b      	ldr	r3, [r7, #0]
+ 80011fa:	2b00      	cmp	r3, #0
+ 80011fc:	d006      	beq.n	800120c <RTOS_mutexCreate+0x2c>
+ 80011fe:	683b      	ldr	r3, [r7, #0]
+ 8001200:	2b01      	cmp	r3, #1
+ 8001202:	d003      	beq.n	800120c <RTOS_mutexCreate+0x2c>
+ 8001204:	2167      	movs	r1, #103	; 0x67
+ 8001206:	4809      	ldr	r0, [pc, #36]	; (800122c <RTOS_mutexCreate+0x4c>)
+ 8001208:	f7ff fb91 	bl	800092e <assert_failed>
+
+	/* initialize mutex waiting list */
+	RTOS_listInit(&pMutex->waitingList);
+ 800120c:	687b      	ldr	r3, [r7, #4]
+ 800120e:	3308      	adds	r3, #8
+ 8001210:	4618      	mov	r0, r3
+ 8001212:	f7ff fdc1 	bl	8000d98 <RTOS_listInit>
+
+	/*initialize the mutex value*/
+	pMutex->mutexValue = initialValue;
+ 8001216:	687b      	ldr	r3, [r7, #4]
+ 8001218:	683a      	ldr	r2, [r7, #0]
+ 800121a:	601a      	str	r2, [r3, #0]
+
+#if(1 == USE_PRIORITY_INHERITANCE)
+	{
+	  /* Initialize mutex holder */
+	  pMutex->mutexHolder = NULL;
+ 800121c:	687b      	ldr	r3, [r7, #4]
+ 800121e:	2200      	movs	r2, #0
+ 8001220:	605a      	str	r2, [r3, #4]
+	}
+	#endif
+
+}
+ 8001222:	bf00      	nop
+ 8001224:	3708      	adds	r7, #8
+ 8001226:	46bd      	mov	sp, r7
+ 8001228:	bd80      	pop	{r7, pc}
+ 800122a:	bf00      	nop
+ 800122c:	08001b90 	.word	0x08001b90
+
+08001230 <RTOS_mutexLock>:
+ * @brief   Mutex lock
+ * @note    waitFlag means that he wants to be put in waiting list if the mutex is locked
+ * @param   RTOS_mutex_t *, int32_t
+ * @retval  RTOS_return_t
+ */
+RTOS_return_t RTOS_mutexLock(RTOS_mutex_t *pMutex, int32_t waitTime) {
+ 8001230:	b580      	push	{r7, lr}
+ 8001232:	b08a      	sub	sp, #40	; 0x28
+ 8001234:	af00      	add	r7, sp, #0
+ 8001236:	6078      	str	r0, [r7, #4]
+ 8001238:	6039      	str	r1, [r7, #0]
+
+	/* check input parameters */
+	ASSERT_param(NULL!=pMutex);
+ 800123a:	687b      	ldr	r3, [r7, #4]
+ 800123c:	2b00      	cmp	r3, #0
+ 800123e:	d103      	bne.n	8001248 <RTOS_mutexLock+0x18>
+ 8001240:	2181      	movs	r1, #129	; 0x81
+ 8001242:	4836      	ldr	r0, [pc, #216]	; (800131c <RTOS_mutexLock+0xec>)
+ 8001244:	f7ff fb73 	bl	800092e <assert_failed>
+	ASSERT_param(WAIT_INDEFINITELY<=waitTime);
+ 8001248:	683b      	ldr	r3, [r7, #0]
+ 800124a:	f1b3 3fff 	cmp.w	r3, #4294967295
+ 800124e:	da03      	bge.n	8001258 <RTOS_mutexLock+0x28>
+ 8001250:	2182      	movs	r1, #130	; 0x82
+ 8001252:	4832      	ldr	r0, [pc, #200]	; (800131c <RTOS_mutexLock+0xec>)
+ 8001254:	f7ff fb6b 	bl	800092e <assert_failed>
+
+	/*create return Status*/
+	RTOS_return_t returnStatus = RTOS_FAILURE;
+ 8001258:	2301      	movs	r3, #1
+ 800125a:	f887 3027 	strb.w	r3, [r7, #39]	; 0x27
+
+	/* Pointer to the current running thread */
+	RTOS_thread_t *pRunningThread;
+
+	/* create terminator of the while loop */
+	uint32_t terminate = 0;
+ 800125e:	2300      	movs	r3, #0
+ 8001260:	623b      	str	r3, [r7, #32]
+
+	/* Try to lock the mutex */
+	while (terminate == 0) {
+ 8001262:	e024      	b.n	80012ae <RTOS_mutexLock+0x7e>
+		/* Check mutex value, note in ARMv7-M exceptions automatically clear the
+		 * exclusive state in the local monitor, no need to use CLREX instruction */
+		if (1 == __LDREXW(&pMutex->mutexValue)) {
+ 8001264:	687b      	ldr	r3, [r7, #4]
+ 8001266:	61bb      	str	r3, [r7, #24]
+ */
+__STATIC_FORCEINLINE uint32_t __LDREXW(volatile uint32_t *addr)
+{
+    uint32_t result;
+
+   __ASM volatile ("ldrex %0, %1" : "=r" (result) : "Q" (*addr) );
+ 8001268:	69bb      	ldr	r3, [r7, #24]
+ 800126a:	e853 3f00 	ldrex	r3, [r3]
+ 800126e:	617b      	str	r3, [r7, #20]
+   return(result);
+ 8001270:	697b      	ldr	r3, [r7, #20]
+ 8001272:	2b01      	cmp	r3, #1
+ 8001274:	d119      	bne.n	80012aa <RTOS_mutexLock+0x7a>
+			/* Mutex is free, locked it */
+			if (0 == __STREXW(0, &pMutex->mutexValue)) {
+ 8001276:	687b      	ldr	r3, [r7, #4]
+ 8001278:	2200      	movs	r2, #0
+ 800127a:	613a      	str	r2, [r7, #16]
+ 800127c:	60fb      	str	r3, [r7, #12]
+ */
+__STATIC_FORCEINLINE uint32_t __STREXW(uint32_t value, volatile uint32_t *addr)
+{
+   uint32_t result;
+
+   __ASM volatile ("strex %0, %2, %1" : "=&r" (result), "=Q" (*addr) : "r" (value) );
+ 800127e:	68f9      	ldr	r1, [r7, #12]
+ 8001280:	693a      	ldr	r2, [r7, #16]
+ 8001282:	e841 2300 	strex	r3, r2, [r1]
+ 8001286:	60bb      	str	r3, [r7, #8]
+   return(result);
+ 8001288:	68bb      	ldr	r3, [r7, #8]
+ 800128a:	2b00      	cmp	r3, #0
+ 800128c:	d10f      	bne.n	80012ae <RTOS_mutexLock+0x7e>
+  __ASM volatile ("dmb 0xF":::"memory");
+ 800128e:	f3bf 8f5f 	dmb	sy
+}
+ 8001292:	bf00      	nop
+				/* Required before accessing protected resource */
+				// Do not start any other memory access until memory barrier is complete
+				__DMB();
+
+				/* Mutex is locked */
+				returnStatus = RTOS_SUCCESS;
+ 8001294:	2300      	movs	r3, #0
+ 8001296:	f887 3027 	strb.w	r3, [r7, #39]	; 0x27
+
+#if(1 == USE_PRIORITY_INHERITANCE)
+				{
+			          /* Update mutex holder */
+			          pMutex->mutexHolder = RTOS_threadGetRunning();
+ 800129a:	f000 fa8d 	bl	80017b8 <RTOS_threadGetRunning>
+ 800129e:	4602      	mov	r2, r0
+ 80012a0:	687b      	ldr	r3, [r7, #4]
+ 80012a2:	605a      	str	r2, [r3, #4]
+				}
+				#endif
+
+				/* Mutex lock succeeded, terminate the loop */
+				terminate = 1;
+ 80012a4:	2301      	movs	r3, #1
+ 80012a6:	623b      	str	r3, [r7, #32]
+ 80012a8:	e001      	b.n	80012ae <RTOS_mutexLock+0x7e>
+				/* Mutex lock failed within locking we will try again */
+			}
+		} else {
+			/* Return status un changed */
+			/* Mutex is locked, terminate the loop */
+			terminate = 1;
+ 80012aa:	2301      	movs	r3, #1
+ 80012ac:	623b      	str	r3, [r7, #32]
+	while (terminate == 0) {
+ 80012ae:	6a3b      	ldr	r3, [r7, #32]
+ 80012b0:	2b00      	cmp	r3, #0
+ 80012b2:	d0d7      	beq.n	8001264 <RTOS_mutexLock+0x34>
+	}
+
+	/* Check waiting flag and return status */
+	/* waiting flag is the flag telling us whether the thread will wait
+	 * and be blocked till the mutex is released or not */
+	if ((NO_WAIT != waitTime) && (RTOS_SUCCESS != returnStatus)) {
+ 80012b4:	683b      	ldr	r3, [r7, #0]
+ 80012b6:	2b00      	cmp	r3, #0
+ 80012b8:	d029      	beq.n	800130e <RTOS_mutexLock+0xde>
+ 80012ba:	f897 3027 	ldrb.w	r3, [r7, #39]	; 0x27
+ 80012be:	2b00      	cmp	r3, #0
+ 80012c0:	d025      	beq.n	800130e <RTOS_mutexLock+0xde>
+		/* Get current running thread */
+		pRunningThread = RTOS_threadGetRunning();
+ 80012c2:	f000 fa79 	bl	80017b8 <RTOS_threadGetRunning>
+ 80012c6:	61f8      	str	r0, [r7, #28]
+
+		/* Remove current thread from ready list */
+		RTOS_listRemove(&pRunningThread->genericListItem);
+ 80012c8:	69fb      	ldr	r3, [r7, #28]
+ 80012ca:	3320      	adds	r3, #32
+ 80012cc:	4618      	mov	r0, r3
+ 80012ce:	f7ff fdb3 	bl	8000e38 <RTOS_listRemove>
+
+		/* Put current thread into the waiting list in priority order */
+		RTOS_listInsert(&pMutex->waitingList, &pRunningThread->eventListItem);
+ 80012d2:	687b      	ldr	r3, [r7, #4]
+ 80012d4:	f103 0208 	add.w	r2, r3, #8
+ 80012d8:	69fb      	ldr	r3, [r7, #28]
+ 80012da:	3334      	adds	r3, #52	; 0x34
+ 80012dc:	4619      	mov	r1, r3
+ 80012de:	4610      	mov	r0, r2
+ 80012e0:	f7ff fdd2 	bl	8000e88 <RTOS_listInsert>
+
+		/* Trigger context switch, set PendSV to pending */
+		SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
+ 80012e4:	4b0e      	ldr	r3, [pc, #56]	; (8001320 <RTOS_mutexLock+0xf0>)
+ 80012e6:	685b      	ldr	r3, [r3, #4]
+ 80012e8:	4a0d      	ldr	r2, [pc, #52]	; (8001320 <RTOS_mutexLock+0xf0>)
+ 80012ea:	f043 5380 	orr.w	r3, r3, #268435456	; 0x10000000
+ 80012ee:	6053      	str	r3, [r2, #4]
+
+		/* Check waiting time */
+		/* if wait time is greater than 0 so we put it in timer waiting list */
+		if (NO_WAIT < waitTime) {
+ 80012f0:	683b      	ldr	r3, [r7, #0]
+ 80012f2:	2b00      	cmp	r3, #0
+ 80012f4:	dd03      	ble.n	80012fe <RTOS_mutexLock+0xce>
+
+			/* Waiting time configured, add current to the timer list */
+			RTOS_threadAddRunningToTimerList(waitTime);
+ 80012f6:	683b      	ldr	r3, [r7, #0]
+ 80012f8:	4618      	mov	r0, r3
+ 80012fa:	f000 fa69 	bl	80017d0 <RTOS_threadAddRunningToTimerList>
+		}
+
+		#if(1 == USE_PRIORITY_INHERITANCE)
+		{
+		  /* Inherit the priority for the mutex holder */
+		  RTOS_threadPriorityInherit(pMutex->mutexHolder);
+ 80012fe:	687b      	ldr	r3, [r7, #4]
+ 8001300:	685b      	ldr	r3, [r3, #4]
+ 8001302:	4618      	mov	r0, r3
+ 8001304:	f000 fb24 	bl	8001950 <RTOS_threadPriorityInherit>
+		}
+		#endif
+
+		/* Return to SVC as indication of context switch */
+		returnStatus = RTOS_CONTEXT_SWITCH_TRIGGERED;
+ 8001308:	2302      	movs	r3, #2
+ 800130a:	f887 3027 	strb.w	r3, [r7, #39]	; 0x27
+	} else {
+		/* No blocking required, do nothing */
+
+	}
+	/* Return */
+	return returnStatus;
+ 800130e:	f897 3027 	ldrb.w	r3, [r7, #39]	; 0x27
+}
+ 8001312:	4618      	mov	r0, r3
+ 8001314:	3728      	adds	r7, #40	; 0x28
+ 8001316:	46bd      	mov	sp, r7
+ 8001318:	bd80      	pop	{r7, pc}
+ 800131a:	bf00      	nop
+ 800131c:	08001b90 	.word	0x08001b90
+ 8001320:	e000ed00 	.word	0xe000ed00
+
+08001324 <RTOS_mutexRelease>:
+ * @brief   Mutex release
+ * @note
+ * @param   RTOS_mutex_t *
+ * @retval  None
+ */
+void RTOS_mutexRelease(RTOS_mutex_t *pMutex) {
+ 8001324:	b580      	push	{r7, lr}
+ 8001326:	b084      	sub	sp, #16
+ 8001328:	af00      	add	r7, sp, #0
+ 800132a:	6078      	str	r0, [r7, #4]
+
+	/* Check input parameters */
+	ASSERT_param(NULL != pMutex);
+ 800132c:	687b      	ldr	r3, [r7, #4]
+ 800132e:	2b00      	cmp	r3, #0
+ 8001330:	d103      	bne.n	800133a <RTOS_mutexRelease+0x16>
+ 8001332:	21e7      	movs	r1, #231	; 0xe7
+ 8001334:	4818      	ldr	r0, [pc, #96]	; (8001398 <RTOS_mutexRelease+0x74>)
+ 8001336:	f7ff fafa 	bl	800092e <assert_failed>
+  __ASM volatile ("dmb 0xF":::"memory");
+ 800133a:	f3bf 8f5f 	dmb	sy
+}
+ 800133e:	bf00      	nop
+
+	/* Required before releasing protected resource */
+	__DMB();
+
+	/* Release the mutex */
+	pMutex->mutexValue = 1;
+ 8001340:	687b      	ldr	r3, [r7, #4]
+ 8001342:	2201      	movs	r2, #1
+ 8001344:	601a      	str	r2, [r3, #0]
+
+	/* Get highest priority waiting thread, the one next from the end */
+	if (0 < pMutex->waitingList.numOfItems) {
+ 8001346:	687b      	ldr	r3, [r7, #4]
+ 8001348:	689b      	ldr	r3, [r3, #8]
+ 800134a:	2b00      	cmp	r3, #0
+ 800134c:	d01b      	beq.n	8001386 <RTOS_mutexRelease+0x62>
+
+		/* when we inserted the items we insert it using priority order so list number is the number after the endList item */
+		pThread = pMutex->waitingList.listEnd.pNext->pThread;
+ 800134e:	687b      	ldr	r3, [r7, #4]
+ 8001350:	695b      	ldr	r3, [r3, #20]
+ 8001352:	68db      	ldr	r3, [r3, #12]
+ 8001354:	60fb      	str	r3, [r7, #12]
+
+		/* Check returned thread */
+		ASSERT_param(NULL != pThread);
+ 8001356:	68fb      	ldr	r3, [r7, #12]
+ 8001358:	2b00      	cmp	r3, #0
+ 800135a:	d103      	bne.n	8001364 <RTOS_mutexRelease+0x40>
+ 800135c:	21f9      	movs	r1, #249	; 0xf9
+ 800135e:	480e      	ldr	r0, [pc, #56]	; (8001398 <RTOS_mutexRelease+0x74>)
+ 8001360:	f7ff fae5 	bl	800092e <assert_failed>
+
+		/* Remove the returned thread item from the waiting list */
+		RTOS_listRemove(&pThread->eventListItem);
+ 8001364:	68fb      	ldr	r3, [r7, #12]
+ 8001366:	3334      	adds	r3, #52	; 0x34
+ 8001368:	4618      	mov	r0, r3
+ 800136a:	f7ff fd65 	bl	8000e38 <RTOS_listRemove>
+
+		/* Check if the generic item in any list */
+		if (NULL != pThread->genericListItem.pList) {
+ 800136e:	68fb      	ldr	r3, [r7, #12]
+ 8001370:	6b1b      	ldr	r3, [r3, #48]	; 0x30
+ 8001372:	2b00      	cmp	r3, #0
+ 8001374:	d004      	beq.n	8001380 <RTOS_mutexRelease+0x5c>
+			/* Remove the generic item from the current list,
+			 * as it will be inserted into ready list */
+			RTOS_listRemove(&pThread->genericListItem);
+ 8001376:	68fb      	ldr	r3, [r7, #12]
+ 8001378:	3320      	adds	r3, #32
+ 800137a:	4618      	mov	r0, r3
+ 800137c:	f7ff fd5c 	bl	8000e38 <RTOS_listRemove>
+		} else {
+			/* Do nothing, generic item is not in any list */
+		}
+
+		/* Add the returned thread into ready list */
+		RTOS_threadAddToReadyList(pThread);
+ 8001380:	68f8      	ldr	r0, [r7, #12]
+ 8001382:	f000 f981 	bl	8001688 <RTOS_threadAddToReadyList>
+	}
+
+	#if(1 == USE_PRIORITY_INHERITANCE)
+	  {
+		/* Disinherit the priority for the current thread */
+		RTOS_threadPriorityDisinherit();
+ 8001386:	f000 fb25 	bl	80019d4 <RTOS_threadPriorityDisinherit>
+
+		/* Update mutex holder */
+		pMutex->mutexHolder = NULL;
+ 800138a:	687b      	ldr	r3, [r7, #4]
+ 800138c:	2200      	movs	r2, #0
+ 800138e:	605a      	str	r2, [r3, #4]
+	  }
+	  #endif
+
+}
+ 8001390:	bf00      	nop
+ 8001392:	3710      	adds	r7, #16
+ 8001394:	46bd      	mov	sp, r7
+ 8001396:	bd80      	pop	{r7, pc}
+ 8001398:	08001b90 	.word	0x08001b90
+
+0800139c <RTOS_semaphoreCreate>:
+ * @brief   Semaphore create
+ * @note
+ * @param   RTOS_semaphore_t *
+ * @retval  None
+ */
+void RTOS_semaphoreCreate(RTOS_semaphore_t *pSemaphore, uint32_t initialValue) {
+ 800139c:	b580      	push	{r7, lr}
+ 800139e:	b082      	sub	sp, #8
+ 80013a0:	af00      	add	r7, sp, #0
+ 80013a2:	6078      	str	r0, [r7, #4]
+ 80013a4:	6039      	str	r1, [r7, #0]
+
+	/* Check input parameters */
+	ASSERT_param(NULL != pSemaphore);
+ 80013a6:	687b      	ldr	r3, [r7, #4]
+ 80013a8:	2b00      	cmp	r3, #0
+ 80013aa:	d103      	bne.n	80013b4 <RTOS_semaphoreCreate+0x18>
+ 80013ac:	2166      	movs	r1, #102	; 0x66
+ 80013ae:	4807      	ldr	r0, [pc, #28]	; (80013cc <RTOS_semaphoreCreate+0x30>)
+ 80013b0:	f7ff fabd 	bl	800092e <assert_failed>
+
+	/* Initialize semaphore waiting list */
+	RTOS_listInit(&pSemaphore->waitingList);
+ 80013b4:	687b      	ldr	r3, [r7, #4]
+ 80013b6:	3308      	adds	r3, #8
+ 80013b8:	4618      	mov	r0, r3
+ 80013ba:	f7ff fced 	bl	8000d98 <RTOS_listInit>
+
+	/* Initialize semaphore value */
+	pSemaphore->semaphoreValue = initialValue;
+ 80013be:	687b      	ldr	r3, [r7, #4]
+ 80013c0:	683a      	ldr	r2, [r7, #0]
+ 80013c2:	601a      	str	r2, [r3, #0]
+}
+ 80013c4:	bf00      	nop
+ 80013c6:	3708      	adds	r7, #8
+ 80013c8:	46bd      	mov	sp, r7
+ 80013ca:	bd80      	pop	{r7, pc}
+ 80013cc:	08001bb0 	.word	0x08001bb0
+
+080013d0 <RTOS_semaphoreTake>:
+ * @brief   Semaphore take
+ * @note    waitFlag means that he wants to be put in waiting list if the Semaphore is locked
+ * @param   RTOS_semaphore_t *, int32_t
+ * @retval  RTOS_return_t
+ */
+RTOS_return_t RTOS_semaphoreTake(RTOS_semaphore_t *pSemaphore, int32_t waitTime) {
+ 80013d0:	b580      	push	{r7, lr}
+ 80013d2:	b08c      	sub	sp, #48	; 0x30
+ 80013d4:	af00      	add	r7, sp, #0
+ 80013d6:	6078      	str	r0, [r7, #4]
+ 80013d8:	6039      	str	r1, [r7, #0]
+
+	/* Check input parameters */
+	ASSERT_param(NULL != pSemaphore);
+ 80013da:	687b      	ldr	r3, [r7, #4]
+ 80013dc:	2b00      	cmp	r3, #0
+ 80013de:	d103      	bne.n	80013e8 <RTOS_semaphoreTake+0x18>
+ 80013e0:	2178      	movs	r1, #120	; 0x78
+ 80013e2:	4835      	ldr	r0, [pc, #212]	; (80014b8 <RTOS_semaphoreTake+0xe8>)
+ 80013e4:	f7ff faa3 	bl	800092e <assert_failed>
+	ASSERT_param(WAIT_INDEFINITELY <= waitTime);
+ 80013e8:	683b      	ldr	r3, [r7, #0]
+ 80013ea:	f1b3 3fff 	cmp.w	r3, #4294967295
+ 80013ee:	da03      	bge.n	80013f8 <RTOS_semaphoreTake+0x28>
+ 80013f0:	2179      	movs	r1, #121	; 0x79
+ 80013f2:	4831      	ldr	r0, [pc, #196]	; (80014b8 <RTOS_semaphoreTake+0xe8>)
+ 80013f4:	f7ff fa9b 	bl	800092e <assert_failed>
+
+	/* Semaphore take return status */
+	RTOS_return_t returnStatus = RTOS_FAILURE;
+ 80013f8:	2301      	movs	r3, #1
+ 80013fa:	f887 302f 	strb.w	r3, [r7, #47]	; 0x2f
+
+	/* Temp variable to store the semaphore value */
+	/* We use temp semaphore value because if the load store failed
+	 * it will try again so we take the current value of the semaphore again
+	 * and edit it in store again in order not to make accumulative error  */
+	uint32_t semaphoreValueTemp = 0;
+ 80013fe:	2300      	movs	r3, #0
+ 8001400:	627b      	str	r3, [r7, #36]	; 0x24
+
+	/* Variable to terminate the while loop */
+	uint32_t terminate = 0;
+ 8001402:	2300      	movs	r3, #0
+ 8001404:	62bb      	str	r3, [r7, #40]	; 0x28
+
+	while (0 == terminate) {
+ 8001406:	e025      	b.n	8001454 <RTOS_semaphoreTake+0x84>
+
+		/* Read the semaphore counter value */
+		semaphoreValueTemp = __LDREXW(&pSemaphore->semaphoreValue);
+ 8001408:	687b      	ldr	r3, [r7, #4]
+ 800140a:	61fb      	str	r3, [r7, #28]
+   __ASM volatile ("ldrex %0, %1" : "=r" (result) : "Q" (*addr) );
+ 800140c:	69fb      	ldr	r3, [r7, #28]
+ 800140e:	e853 3f00 	ldrex	r3, [r3]
+ 8001412:	61bb      	str	r3, [r7, #24]
+   return(result);
+ 8001414:	69bb      	ldr	r3, [r7, #24]
+ 8001416:	627b      	str	r3, [r7, #36]	; 0x24
+
+		/* Check semaphore counter value, note in ARMv7-M exceptions automatically
+		 * clear the exclusive state in the local monitor,
+		 * no need to use CLREX instruction */
+		if (0 < semaphoreValueTemp) {
+ 8001418:	6a7b      	ldr	r3, [r7, #36]	; 0x24
+ 800141a:	2b00      	cmp	r3, #0
+ 800141c:	d015      	beq.n	800144a <RTOS_semaphoreTake+0x7a>
+
+			/* Semaphore is not fully taken, take one by decrement */
+			if (0
+					== __STREXW((semaphoreValueTemp - 1),
+ 800141e:	6a7b      	ldr	r3, [r7, #36]	; 0x24
+ 8001420:	1e5a      	subs	r2, r3, #1
+							&pSemaphore->semaphoreValue)) {
+ 8001422:	687b      	ldr	r3, [r7, #4]
+ 8001424:	617a      	str	r2, [r7, #20]
+ 8001426:	613b      	str	r3, [r7, #16]
+   __ASM volatile ("strex %0, %2, %1" : "=&r" (result), "=Q" (*addr) : "r" (value) );
+ 8001428:	6939      	ldr	r1, [r7, #16]
+ 800142a:	697a      	ldr	r2, [r7, #20]
+ 800142c:	e841 2300 	strex	r3, r2, [r1]
+ 8001430:	60fb      	str	r3, [r7, #12]
+   return(result);
+ 8001432:	68fb      	ldr	r3, [r7, #12]
+			if (0
+ 8001434:	2b00      	cmp	r3, #0
+ 8001436:	d10d      	bne.n	8001454 <RTOS_semaphoreTake+0x84>
+  __ASM volatile ("dmb 0xF":::"memory");
+ 8001438:	f3bf 8f5f 	dmb	sy
+}
+ 800143c:	bf00      	nop
+
+				/* Required before accessing protected resource */
+				__DMB();
+
+				/* Semaphore is taken, return OK */
+				returnStatus = RTOS_SUCCESS;
+ 800143e:	2300      	movs	r3, #0
+ 8001440:	f887 302f 	strb.w	r3, [r7, #47]	; 0x2f
+
+				/* Store succeeded, terminate the loop */
+				terminate = 1;
+ 8001444:	2301      	movs	r3, #1
+ 8001446:	62bb      	str	r3, [r7, #40]	; 0x28
+ 8001448:	e004      	b.n	8001454 <RTOS_semaphoreTake+0x84>
+  \brief   Remove the exclusive lock
+  \details Removes the exclusive lock which is created by LDREX.
+ */
+__STATIC_FORCEINLINE void __CLREX(void)
+{
+  __ASM volatile ("clrex" ::: "memory");
+ 800144a:	f3bf 8f2f 	clrex
+}
+ 800144e:	bf00      	nop
+
+			/* clear the local record of the executing processor that an address has had a request for an exclusive access.
+			 * used because if we couldn't reach storeEx after the load we clear the exclusive state */
+			/* its the somthing that telling us that the load store falied */
+			__CLREX();
+			terminate = 1;
+ 8001450:	2301      	movs	r3, #1
+ 8001452:	62bb      	str	r3, [r7, #40]	; 0x28
+	while (0 == terminate) {
+ 8001454:	6abb      	ldr	r3, [r7, #40]	; 0x28
+ 8001456:	2b00      	cmp	r3, #0
+ 8001458:	d0d6      	beq.n	8001408 <RTOS_semaphoreTake+0x38>
+		}
+	}
+
+	/* Check waiting flag and return status */
+	if ((NO_WAIT != waitTime) && (RTOS_SUCCESS != returnStatus)) {
+ 800145a:	683b      	ldr	r3, [r7, #0]
+ 800145c:	2b00      	cmp	r3, #0
+ 800145e:	d024      	beq.n	80014aa <RTOS_semaphoreTake+0xda>
+ 8001460:	f897 302f 	ldrb.w	r3, [r7, #47]	; 0x2f
+ 8001464:	2b00      	cmp	r3, #0
+ 8001466:	d020      	beq.n	80014aa <RTOS_semaphoreTake+0xda>
+
+		/* Get current running thread */
+		pRunningThread = RTOS_threadGetRunning();
+ 8001468:	f000 f9a6 	bl	80017b8 <RTOS_threadGetRunning>
+ 800146c:	6238      	str	r0, [r7, #32]
+
+		/* Remove current thread from ready list */
+		RTOS_listRemove(&pRunningThread->genericListItem);
+ 800146e:	6a3b      	ldr	r3, [r7, #32]
+ 8001470:	3320      	adds	r3, #32
+ 8001472:	4618      	mov	r0, r3
+ 8001474:	f7ff fce0 	bl	8000e38 <RTOS_listRemove>
+
+		/* Put current thread into the waiting list */
+		RTOS_listInsert(&pSemaphore->waitingList, &pRunningThread->eventListItem);
+ 8001478:	687b      	ldr	r3, [r7, #4]
+ 800147a:	f103 0208 	add.w	r2, r3, #8
+ 800147e:	6a3b      	ldr	r3, [r7, #32]
+ 8001480:	3334      	adds	r3, #52	; 0x34
+ 8001482:	4619      	mov	r1, r3
+ 8001484:	4610      	mov	r0, r2
+ 8001486:	f7ff fcff 	bl	8000e88 <RTOS_listInsert>
+
+		/* Trigger context switch, set PendSV to pending */
+		SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
+ 800148a:	4b0c      	ldr	r3, [pc, #48]	; (80014bc <RTOS_semaphoreTake+0xec>)
+ 800148c:	685b      	ldr	r3, [r3, #4]
+ 800148e:	4a0b      	ldr	r2, [pc, #44]	; (80014bc <RTOS_semaphoreTake+0xec>)
+ 8001490:	f043 5380 	orr.w	r3, r3, #268435456	; 0x10000000
+ 8001494:	6053      	str	r3, [r2, #4]
+
+	    /* Check waiting time */
+	    if(NO_WAIT < waitTime)
+ 8001496:	683b      	ldr	r3, [r7, #0]
+ 8001498:	2b00      	cmp	r3, #0
+ 800149a:	dd03      	ble.n	80014a4 <RTOS_semaphoreTake+0xd4>
+	    {
+	      /* Waiting time configured, add current to the timer list */
+	      RTOS_threadAddRunningToTimerList(waitTime);
+ 800149c:	683b      	ldr	r3, [r7, #0]
+ 800149e:	4618      	mov	r0, r3
+ 80014a0:	f000 f996 	bl	80017d0 <RTOS_threadAddRunningToTimerList>
+	      /* Thread will wait indefinitely, do nothing */
+	    }
+
+
+		/* Return to SVC as indication of context switch */
+		returnStatus = RTOS_CONTEXT_SWITCH_TRIGGERED;
+ 80014a4:	2302      	movs	r3, #2
+ 80014a6:	f887 302f 	strb.w	r3, [r7, #47]	; 0x2f
+	} else {
+		/* No blocking required, do nothing */
+		/* returnStatus still equals Zero */
+	}
+	/* Return */
+	return returnStatus;
+ 80014aa:	f897 302f 	ldrb.w	r3, [r7, #47]	; 0x2f
+}
+ 80014ae:	4618      	mov	r0, r3
+ 80014b0:	3730      	adds	r7, #48	; 0x30
+ 80014b2:	46bd      	mov	sp, r7
+ 80014b4:	bd80      	pop	{r7, pc}
+ 80014b6:	bf00      	nop
+ 80014b8:	08001bb0 	.word	0x08001bb0
+ 80014bc:	e000ed00 	.word	0xe000ed00
+
+080014c0 <RTOS_semaphoreGive>:
+ * @brief   Semaphore give
+ * @note
+ * @param   RTOS_semaphore_t *
+ * @retval  None
+ */
+void RTOS_semaphoreGive(RTOS_semaphore_t *pSemaphore) {
+ 80014c0:	b580      	push	{r7, lr}
+ 80014c2:	b08a      	sub	sp, #40	; 0x28
+ 80014c4:	af00      	add	r7, sp, #0
+ 80014c6:	6078      	str	r0, [r7, #4]
+
+	  /* Check input parameters */
+	  ASSERT_param(NULL != pSemaphore);
+ 80014c8:	687b      	ldr	r3, [r7, #4]
+ 80014ca:	2b00      	cmp	r3, #0
+ 80014cc:	d103      	bne.n	80014d6 <RTOS_semaphoreGive+0x16>
+ 80014ce:	21e2      	movs	r1, #226	; 0xe2
+ 80014d0:	4825      	ldr	r0, [pc, #148]	; (8001568 <RTOS_semaphoreGive+0xa8>)
+ 80014d2:	f7ff fa2c 	bl	800092e <assert_failed>
+
+	  /* Pointer to the unblocked thread */
+	  RTOS_thread_t * pThread;
+
+	  /* Temp variable used to read the semaphore counter value */
+	  uint32_t semaphoreValueTemp = 0;
+ 80014d6:	2300      	movs	r3, #0
+ 80014d8:	623b      	str	r3, [r7, #32]
+
+	  /* Variable to terminate the while loop */
+	  uint32_t terminate = 0;
+ 80014da:	2300      	movs	r3, #0
+ 80014dc:	627b      	str	r3, [r7, #36]	; 0x24
+
+	  /* Try incrementing the semaphore counter */
+	  while(1 != terminate)
+ 80014de:	e01b      	b.n	8001518 <RTOS_semaphoreGive+0x58>
+	  {
+	    /* Get the semaphore value */
+	    semaphoreValueTemp = __LDREXW(&pSemaphore->semaphoreValue);
+ 80014e0:	687b      	ldr	r3, [r7, #4]
+ 80014e2:	60fb      	str	r3, [r7, #12]
+   __ASM volatile ("ldrex %0, %1" : "=r" (result) : "Q" (*addr) );
+ 80014e4:	68fb      	ldr	r3, [r7, #12]
+ 80014e6:	e853 3f00 	ldrex	r3, [r3]
+ 80014ea:	60bb      	str	r3, [r7, #8]
+   return(result);
+ 80014ec:	68bb      	ldr	r3, [r7, #8]
+ 80014ee:	623b      	str	r3, [r7, #32]
+
+	    /* Increment temp variable */
+	    semaphoreValueTemp++;
+ 80014f0:	6a3b      	ldr	r3, [r7, #32]
+ 80014f2:	3301      	adds	r3, #1
+ 80014f4:	623b      	str	r3, [r7, #32]
+
+	    /* Try to store the incremented semaphore value */
+	    if(0 == __STREXW(semaphoreValueTemp, &pSemaphore->semaphoreValue))
+ 80014f6:	687b      	ldr	r3, [r7, #4]
+ 80014f8:	6a3a      	ldr	r2, [r7, #32]
+ 80014fa:	61ba      	str	r2, [r7, #24]
+ 80014fc:	617b      	str	r3, [r7, #20]
+   __ASM volatile ("strex %0, %2, %1" : "=&r" (result), "=Q" (*addr) : "r" (value) );
+ 80014fe:	6979      	ldr	r1, [r7, #20]
+ 8001500:	69ba      	ldr	r2, [r7, #24]
+ 8001502:	e841 2300 	strex	r3, r2, [r1]
+ 8001506:	613b      	str	r3, [r7, #16]
+   return(result);
+ 8001508:	693b      	ldr	r3, [r7, #16]
+ 800150a:	2b00      	cmp	r3, #0
+ 800150c:	d104      	bne.n	8001518 <RTOS_semaphoreGive+0x58>
+	    {
+	      /* Store succeeded, terminate the loop */
+	      terminate = 1;
+ 800150e:	2301      	movs	r3, #1
+ 8001510:	627b      	str	r3, [r7, #36]	; 0x24
+  __ASM volatile ("dmb 0xF":::"memory");
+ 8001512:	f3bf 8f5f 	dmb	sy
+}
+ 8001516:	bf00      	nop
+	  while(1 != terminate)
+ 8001518:	6a7b      	ldr	r3, [r7, #36]	; 0x24
+ 800151a:	2b01      	cmp	r3, #1
+ 800151c:	d1e0      	bne.n	80014e0 <RTOS_semaphoreGive+0x20>
+	      /* Store failed, try again */
+	    }
+	  }
+
+	  /* Get highest priority waiting thread, the one next from the end */
+	  if(0 < pSemaphore->waitingList.numOfItems)
+ 800151e:	687b      	ldr	r3, [r7, #4]
+ 8001520:	689b      	ldr	r3, [r3, #8]
+ 8001522:	2b00      	cmp	r3, #0
+ 8001524:	d01c      	beq.n	8001560 <RTOS_semaphoreGive+0xa0>
+	  {
+		  /* get the highest priority thread in the semaphore waiting list */
+	    pThread = pSemaphore->waitingList.listEnd.pNext->pThread;
+ 8001526:	687b      	ldr	r3, [r7, #4]
+ 8001528:	695b      	ldr	r3, [r3, #20]
+ 800152a:	68db      	ldr	r3, [r3, #12]
+ 800152c:	61fb      	str	r3, [r7, #28]
+
+	    /* Check returned thread */
+	    ASSERT_param(NULL != pThread);
+ 800152e:	69fb      	ldr	r3, [r7, #28]
+ 8001530:	2b00      	cmp	r3, #0
+ 8001532:	d104      	bne.n	800153e <RTOS_semaphoreGive+0x7e>
+ 8001534:	f44f 7186 	mov.w	r1, #268	; 0x10c
+ 8001538:	480b      	ldr	r0, [pc, #44]	; (8001568 <RTOS_semaphoreGive+0xa8>)
+ 800153a:	f7ff f9f8 	bl	800092e <assert_failed>
+
+	    /* Remove the returned thread item from the waiting list */
+	    RTOS_listRemove(&pThread->eventListItem);
+ 800153e:	69fb      	ldr	r3, [r7, #28]
+ 8001540:	3334      	adds	r3, #52	; 0x34
+ 8001542:	4618      	mov	r0, r3
+ 8001544:	f7ff fc78 	bl	8000e38 <RTOS_listRemove>
+
+
+	    /* Check if the generic item in any list */
+	    if(NULL != pThread->genericListItem.pList)
+ 8001548:	69fb      	ldr	r3, [r7, #28]
+ 800154a:	6b1b      	ldr	r3, [r3, #48]	; 0x30
+ 800154c:	2b00      	cmp	r3, #0
+ 800154e:	d004      	beq.n	800155a <RTOS_semaphoreGive+0x9a>
+	    {
+	      /* Remove the generic item from the current list,
+	       * as it will be inserted into ready list */
+	      RTOS_listRemove(&pThread->genericListItem);
+ 8001550:	69fb      	ldr	r3, [r7, #28]
+ 8001552:	3320      	adds	r3, #32
+ 8001554:	4618      	mov	r0, r3
+ 8001556:	f7ff fc6f 	bl	8000e38 <RTOS_listRemove>
+	    {
+	      /* Do nothing, generic item is not in any list */
+	    }
+
+	    /* Add the returned thread into ready list */
+	    RTOS_threadAddToReadyList(pThread);
+ 800155a:	69f8      	ldr	r0, [r7, #28]
+ 800155c:	f000 f894 	bl	8001688 <RTOS_threadAddToReadyList>
+	  }
+	  else
+	  {
+	    /* No threads are waiting, do nothing */
+	  }
+}
+ 8001560:	bf00      	nop
+ 8001562:	3728      	adds	r7, #40	; 0x28
+ 8001564:	46bd      	mov	sp, r7
+ 8001566:	bd80      	pop	{r7, pc}
+ 8001568:	08001bb0 	.word	0x08001bb0
+
+0800156c <RTOS_threadInitLists>:
+ * @brief   Initialize thread list
+ * @note
+ * @param
+ * @retval  None
+ */
+void RTOS_threadInitLists(void) {
+ 800156c:	b580      	push	{r7, lr}
+ 800156e:	b082      	sub	sp, #8
+ 8001570:	af00      	add	r7, sp, #0
+	/* Initialize ready list */
+	for (uint32_t priority = 0; priority < THREAD_PRIORITY_LEVELS; priority++) {
+ 8001572:	2300      	movs	r3, #0
+ 8001574:	607b      	str	r3, [r7, #4]
+ 8001576:	e00c      	b.n	8001592 <RTOS_threadInitLists+0x26>
+		RTOS_listInit(&readyList[priority]);
+ 8001578:	687a      	ldr	r2, [r7, #4]
+ 800157a:	4613      	mov	r3, r2
+ 800157c:	009b      	lsls	r3, r3, #2
+ 800157e:	4413      	add	r3, r2
+ 8001580:	009b      	lsls	r3, r3, #2
+ 8001582:	4a08      	ldr	r2, [pc, #32]	; (80015a4 <RTOS_threadInitLists+0x38>)
+ 8001584:	4413      	add	r3, r2
+ 8001586:	4618      	mov	r0, r3
+ 8001588:	f7ff fc06 	bl	8000d98 <RTOS_listInit>
+	for (uint32_t priority = 0; priority < THREAD_PRIORITY_LEVELS; priority++) {
+ 800158c:	687b      	ldr	r3, [r7, #4]
+ 800158e:	3301      	adds	r3, #1
+ 8001590:	607b      	str	r3, [r7, #4]
+ 8001592:	687b      	ldr	r3, [r7, #4]
+ 8001594:	2b0f      	cmp	r3, #15
+ 8001596:	d9ef      	bls.n	8001578 <RTOS_threadInitLists+0xc>
+	}
+}
+ 8001598:	bf00      	nop
+ 800159a:	bf00      	nop
+ 800159c:	3708      	adds	r7, #8
+ 800159e:	46bd      	mov	sp, r7
+ 80015a0:	bd80      	pop	{r7, pc}
+ 80015a2:	bf00      	nop
+ 80015a4:	2000a228 	.word	0x2000a228
+
+080015a8 <RTOS_threadCreate>:
+ * @note	Here we create TCB of the new thread
+ * @param   RTOS_thread_t * thread object , Stack , priority of thread , function of thread
+ * @retval  void
+ */
+void RTOS_threadCreate(RTOS_thread_t *pThread, RTOS_stack_t *pStack,
+		uint32_t priority, void *pFunction) {
+ 80015a8:	b580      	push	{r7, lr}
+ 80015aa:	b084      	sub	sp, #16
+ 80015ac:	af00      	add	r7, sp, #0
+ 80015ae:	60f8      	str	r0, [r7, #12]
+ 80015b0:	60b9      	str	r1, [r7, #8]
+ 80015b2:	607a      	str	r2, [r7, #4]
+ 80015b4:	603b      	str	r3, [r7, #0]
+
+	/* Check input parameters */
+	ASSERT_param(pThread != NULL);
+ 80015b6:	68fb      	ldr	r3, [r7, #12]
+ 80015b8:	2b00      	cmp	r3, #0
+ 80015ba:	d103      	bne.n	80015c4 <RTOS_threadCreate+0x1c>
+ 80015bc:	2194      	movs	r1, #148	; 0x94
+ 80015be:	4830      	ldr	r0, [pc, #192]	; (8001680 <RTOS_threadCreate+0xd8>)
+ 80015c0:	f7ff f9b5 	bl	800092e <assert_failed>
+	ASSERT_param(pStack != NULL);
+ 80015c4:	68bb      	ldr	r3, [r7, #8]
+ 80015c6:	2b00      	cmp	r3, #0
+ 80015c8:	d103      	bne.n	80015d2 <RTOS_threadCreate+0x2a>
+ 80015ca:	2195      	movs	r1, #149	; 0x95
+ 80015cc:	482c      	ldr	r0, [pc, #176]	; (8001680 <RTOS_threadCreate+0xd8>)
+ 80015ce:	f7ff f9ae 	bl	800092e <assert_failed>
+	ASSERT_param(pFunction != NULL);
+ 80015d2:	683b      	ldr	r3, [r7, #0]
+ 80015d4:	2b00      	cmp	r3, #0
+ 80015d6:	d103      	bne.n	80015e0 <RTOS_threadCreate+0x38>
+ 80015d8:	2196      	movs	r1, #150	; 0x96
+ 80015da:	4829      	ldr	r0, [pc, #164]	; (8001680 <RTOS_threadCreate+0xd8>)
+ 80015dc:	f7ff f9a7 	bl	800092e <assert_failed>
+	ASSERT_param(priority < THREAD_PRIORITY_LEVELS);
+ 80015e0:	687b      	ldr	r3, [r7, #4]
+ 80015e2:	2b0f      	cmp	r3, #15
+ 80015e4:	d903      	bls.n	80015ee <RTOS_threadCreate+0x46>
+ 80015e6:	2197      	movs	r1, #151	; 0x97
+ 80015e8:	4825      	ldr	r0, [pc, #148]	; (8001680 <RTOS_threadCreate+0xd8>)
+ 80015ea:	f7ff f9a0 	bl	800092e <assert_failed>
+	 * length converted to byte length, stack frame size is 18 words */
+	/* Note that Stack is 64bit and the special registers are 32 bit so to
+	 * put the stack pointer just above the special registers we add the whole
+	 * size (stack size * 8)Byte  and decrease by (18 * 4)byte */
+	pThread->pStackPointer =
+			((uint32_t) pStack + THREAD_STACK_SIZE * 8 - 18 * 4); /* WATCH CAREFULLY  */ //(THREAD_STACK_SIZE * 8 == 8K )
+ 80015ee:	68bb      	ldr	r3, [r7, #8]
+ 80015f0:	f503 53fd 	add.w	r3, r3, #8096	; 0x1fa0
+ 80015f4:	3318      	adds	r3, #24
+	pThread->pStackPointer =
+ 80015f6:	68fa      	ldr	r2, [r7, #12]
+ 80015f8:	6013      	str	r3, [r2, #0]
+	 * come back after interrupt .... also this is what mainly will make the context
+	 * switching of the function*/
+	/*@Note		16<<2  == 16*4  thats because is LR is third register from the the end
+	 * 			after program counter*/
+
+	MEM32_ADDRESS(pThread->pStackPointer + (16 << 2)) = (uint32_t) pFunction;
+ 80015fa:	68fb      	ldr	r3, [r7, #12]
+ 80015fc:	681b      	ldr	r3, [r3, #0]
+ 80015fe:	3340      	adds	r3, #64	; 0x40
+ 8001600:	461a      	mov	r2, r3
+ 8001602:	683b      	ldr	r3, [r7, #0]
+ 8001604:	6013      	str	r3, [r2, #0]
+
+	/* Write initial xPSR, program status register, thumb */
+	MEM32_ADDRESS((pThread->pStackPointer + (17 << 2))) = 0x01000000;
+ 8001606:	68fb      	ldr	r3, [r7, #12]
+ 8001608:	681b      	ldr	r3, [r3, #0]
+ 800160a:	3344      	adds	r3, #68	; 0x44
+ 800160c:	461a      	mov	r2, r3
+ 800160e:	f04f 7380 	mov.w	r3, #16777216	; 0x1000000
+ 8001612:	6013      	str	r3, [r2, #0]
+
+	/* Write EXC_RETURN, since the execution threads are using PSP, this will
+	 * allow SVC to return to thpStackPointere thread with PSP */
+	MEM32_ADDRESS(pThread->pStackPointer) = 0xFFFFFFFDUL;
+ 8001614:	68fb      	ldr	r3, [r7, #12]
+ 8001616:	681b      	ldr	r3, [r3, #0]
+ 8001618:	461a      	mov	r2, r3
+ 800161a:	f06f 0302 	mvn.w	r3, #2
+ 800161e:	6013      	str	r3, [r2, #0]
+
+	/* Write initial CONTROL register value UNPRIVILEGED, PSP & no FPU */
+	/* it controls three things bit[0] PRIVILEGED(0) or UNPRIVILEGED(1) bit[1] Stack pointer as current stack(0)
+	 * or Use Process stack pointer (1) and bit[2] Floating point not active(0) floating point active(1)   */
+	MEM32_ADDRESS((pThread->pStackPointer + (1 << 2))) = 0x3;
+ 8001620:	68fb      	ldr	r3, [r7, #12]
+ 8001622:	681b      	ldr	r3, [r3, #0]
+ 8001624:	3304      	adds	r3, #4
+ 8001626:	461a      	mov	r2, r3
+ 8001628:	2303      	movs	r3, #3
+ 800162a:	6013      	str	r3, [r2, #0]
+
+	/* Set thread priority */
+	pThread->priority = priority;
+ 800162c:	68fb      	ldr	r3, [r7, #12]
+ 800162e:	687a      	ldr	r2, [r7, #4]
+ 8001630:	605a      	str	r2, [r3, #4]
+
+#if(1 == USE_PRIORITY_INHERITANCE)
+	{
+		/* Set thread original priority */
+		pThread->originalPriority = priority;
+ 8001632:	68fb      	ldr	r3, [r7, #12]
+ 8001634:	687a      	ldr	r2, [r7, #4]
+ 8001636:	649a      	str	r2, [r3, #72]	; 0x48
+	}
+#endif
+
+	/* Increment number of threads and set the thread ID */
+	if (0 == pThread->threadID) {
+ 8001638:	68fb      	ldr	r3, [r7, #12]
+ 800163a:	689b      	ldr	r3, [r3, #8]
+ 800163c:	2b00      	cmp	r3, #0
+ 800163e:	d108      	bne.n	8001652 <RTOS_threadCreate+0xaa>
+		/* New thread is created */
+		pThread->threadID = ++numOfThreads;
+ 8001640:	4b10      	ldr	r3, [pc, #64]	; (8001684 <RTOS_threadCreate+0xdc>)
+ 8001642:	681b      	ldr	r3, [r3, #0]
+ 8001644:	3301      	adds	r3, #1
+ 8001646:	4a0f      	ldr	r2, [pc, #60]	; (8001684 <RTOS_threadCreate+0xdc>)
+ 8001648:	6013      	str	r3, [r2, #0]
+ 800164a:	4b0e      	ldr	r3, [pc, #56]	; (8001684 <RTOS_threadCreate+0xdc>)
+ 800164c:	681a      	ldr	r2, [r3, #0]
+ 800164e:	68fb      	ldr	r3, [r7, #12]
+ 8001650:	609a      	str	r2, [r3, #8]
+	} else {
+		/* Do nothing, this thread was re-created */
+	}
+
+	/* Thread is not yet in any list */
+	pThread->genericListItem.pList = NULL;
+ 8001652:	68fb      	ldr	r3, [r7, #12]
+ 8001654:	2200      	movs	r2, #0
+ 8001656:	631a      	str	r2, [r3, #48]	; 0x30
+	pThread->eventListItem.pList = NULL;
+ 8001658:	68fb      	ldr	r3, [r7, #12]
+ 800165a:	2200      	movs	r2, #0
+ 800165c:	645a      	str	r2, [r3, #68]	; 0x44
+
+	/* Link this thread with its list item */
+	pThread->genericListItem.pThread = (void*) pThread;
+ 800165e:	68fb      	ldr	r3, [r7, #12]
+ 8001660:	68fa      	ldr	r2, [r7, #12]
+ 8001662:	62da      	str	r2, [r3, #44]	; 0x2c
+	pThread->eventListItem.pThread = (void*) pThread;
+ 8001664:	68fb      	ldr	r3, [r7, #12]
+ 8001666:	68fa      	ldr	r2, [r7, #12]
+ 8001668:	641a      	str	r2, [r3, #64]	; 0x40
+
+	/* Set the event item value to the priority, this will be used to order the
+	 * items by priority in synchronization events list, for the generic lists
+	 * e.g. timer list, items are ordered with the timeout value */
+	pThread->eventListItem.itemValue = priority;
+ 800166a:	68fb      	ldr	r3, [r7, #12]
+ 800166c:	687a      	ldr	r2, [r7, #4]
+ 800166e:	635a      	str	r2, [r3, #52]	; 0x34
+
+	/* Add new thread to ready list */
+	RTOS_threadAddToReadyList(pThread);
+ 8001670:	68f8      	ldr	r0, [r7, #12]
+ 8001672:	f000 f809 	bl	8001688 <RTOS_threadAddToReadyList>
+}
+ 8001676:	bf00      	nop
+ 8001678:	3710      	adds	r7, #16
+ 800167a:	46bd      	mov	sp, r7
+ 800167c:	bd80      	pop	{r7, pc}
+ 800167e:	bf00      	nop
+ 8001680:	08001bd4 	.word	0x08001bd4
+ 8001684:	2000a384 	.word	0x2000a384
+
+08001688 <RTOS_threadAddToReadyList>:
+ * @brief   Add thread to the ready list
+ * @note
+ * @param
+ * @retval  None
+ */
+void RTOS_threadAddToReadyList(RTOS_thread_t *pThread) {
+ 8001688:	b580      	push	{r7, lr}
+ 800168a:	b082      	sub	sp, #8
+ 800168c:	af00      	add	r7, sp, #0
+ 800168e:	6078      	str	r0, [r7, #4]
+
+	/* Check input parameters */
+	ASSERT_param(pThread != NULL);
+ 8001690:	687b      	ldr	r3, [r7, #4]
+ 8001692:	2b00      	cmp	r3, #0
+ 8001694:	d103      	bne.n	800169e <RTOS_threadAddToReadyList+0x16>
+ 8001696:	21f8      	movs	r1, #248	; 0xf8
+ 8001698:	4817      	ldr	r0, [pc, #92]	; (80016f8 <RTOS_threadAddToReadyList+0x70>)
+ 800169a:	f7ff f948 	bl	800092e <assert_failed>
+
+	/* Add new thread to ready list */
+	/* ready list is array of lists based on priority */
+	RTOS_listInsertEnd(&readyList[pThread->priority],
+ 800169e:	687b      	ldr	r3, [r7, #4]
+ 80016a0:	685a      	ldr	r2, [r3, #4]
+ 80016a2:	4613      	mov	r3, r2
+ 80016a4:	009b      	lsls	r3, r3, #2
+ 80016a6:	4413      	add	r3, r2
+ 80016a8:	009b      	lsls	r3, r3, #2
+ 80016aa:	4a14      	ldr	r2, [pc, #80]	; (80016fc <RTOS_threadAddToReadyList+0x74>)
+ 80016ac:	441a      	add	r2, r3
+ 80016ae:	687b      	ldr	r3, [r7, #4]
+ 80016b0:	3320      	adds	r3, #32
+ 80016b2:	4619      	mov	r1, r3
+ 80016b4:	4610      	mov	r0, r2
+ 80016b6:	f7ff fb97 	bl	8000de8 <RTOS_listInsertEnd>
+			&pThread->genericListItem); // WATCH CAREFULLY FOR THE POSTION AND INDEX
+
+	/* Set current top priority */
+	if (pThread->priority < currentTopPriotiy) {
+ 80016ba:	687b      	ldr	r3, [r7, #4]
+ 80016bc:	685a      	ldr	r2, [r3, #4]
+ 80016be:	4b10      	ldr	r3, [pc, #64]	; (8001700 <RTOS_threadAddToReadyList+0x78>)
+ 80016c0:	681b      	ldr	r3, [r3, #0]
+ 80016c2:	429a      	cmp	r2, r3
+ 80016c4:	d203      	bcs.n	80016ce <RTOS_threadAddToReadyList+0x46>
+		currentTopPriotiy = pThread->priority;
+ 80016c6:	687b      	ldr	r3, [r7, #4]
+ 80016c8:	685b      	ldr	r3, [r3, #4]
+ 80016ca:	4a0d      	ldr	r2, [pc, #52]	; (8001700 <RTOS_threadAddToReadyList+0x78>)
+ 80016cc:	6013      	str	r3, [r2, #0]
+	}
+	/* Check the need for context switch when scheduler is running
+	 * and this thread is the higher priority than the running thread */
+	/* the lower the priority number the higher the priority */
+	if ((NULL != pRunningThread)
+ 80016ce:	4b0d      	ldr	r3, [pc, #52]	; (8001704 <RTOS_threadAddToReadyList+0x7c>)
+ 80016d0:	681b      	ldr	r3, [r3, #0]
+ 80016d2:	2b00      	cmp	r3, #0
+ 80016d4:	d00c      	beq.n	80016f0 <RTOS_threadAddToReadyList+0x68>
+			&& (pThread->priority < pRunningThread->priority)) {
+ 80016d6:	687b      	ldr	r3, [r7, #4]
+ 80016d8:	685a      	ldr	r2, [r3, #4]
+ 80016da:	4b0a      	ldr	r3, [pc, #40]	; (8001704 <RTOS_threadAddToReadyList+0x7c>)
+ 80016dc:	681b      	ldr	r3, [r3, #0]
+ 80016de:	685b      	ldr	r3, [r3, #4]
+ 80016e0:	429a      	cmp	r2, r3
+ 80016e2:	d205      	bcs.n	80016f0 <RTOS_threadAddToReadyList+0x68>
+
+		/* Trigger context switch, set PendSV to pending */
+		SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
+ 80016e4:	4b08      	ldr	r3, [pc, #32]	; (8001708 <RTOS_threadAddToReadyList+0x80>)
+ 80016e6:	685b      	ldr	r3, [r3, #4]
+ 80016e8:	4a07      	ldr	r2, [pc, #28]	; (8001708 <RTOS_threadAddToReadyList+0x80>)
+ 80016ea:	f043 5380 	orr.w	r3, r3, #268435456	; 0x10000000
+ 80016ee:	6053      	str	r3, [r2, #4]
+
+	} else {
+		/* Context switch is not required */
+	}
+
+}
+ 80016f0:	bf00      	nop
+ 80016f2:	3708      	adds	r7, #8
+ 80016f4:	46bd      	mov	sp, r7
+ 80016f6:	bd80      	pop	{r7, pc}
+ 80016f8:	08001bd4 	.word	0x08001bd4
+ 80016fc:	2000a228 	.word	0x2000a228
+ 8001700:	20000000 	.word	0x20000000
+ 8001704:	2000a37c 	.word	0x2000a37c
+ 8001708:	e000ed00 	.word	0xe000ed00
+
+0800170c <RTOS_threadSwitchRunning>:
+ * @brief   Switch the current running thread
+ * @note
+ * @param
+ * @retval  None
+ */
+void RTOS_threadSwitchRunning(void) {
+ 800170c:	b580      	push	{r7, lr}
+ 800170e:	b082      	sub	sp, #8
+ 8001710:	af00      	add	r7, sp, #0
+	/* find the highest priority ready thread */
+	while (readyList[currentTopPriotiy].numOfItems == 0) {
+ 8001712:	e013      	b.n	800173c <RTOS_threadSwitchRunning+0x30>
+		ASSERT_param(THREAD_PRIORITY_LEVELS>currentTopPriotiy);
+ 8001714:	4b23      	ldr	r3, [pc, #140]	; (80017a4 <RTOS_threadSwitchRunning+0x98>)
+ 8001716:	681b      	ldr	r3, [r3, #0]
+ 8001718:	2b0f      	cmp	r3, #15
+ 800171a:	d904      	bls.n	8001726 <RTOS_threadSwitchRunning+0x1a>
+ 800171c:	f240 111b 	movw	r1, #283	; 0x11b
+ 8001720:	4821      	ldr	r0, [pc, #132]	; (80017a8 <RTOS_threadSwitchRunning+0x9c>)
+ 8001722:	f7ff f904 	bl	800092e <assert_failed>
+
+		currentTopPriotiy++;
+ 8001726:	4b1f      	ldr	r3, [pc, #124]	; (80017a4 <RTOS_threadSwitchRunning+0x98>)
+ 8001728:	681b      	ldr	r3, [r3, #0]
+ 800172a:	3301      	adds	r3, #1
+ 800172c:	4a1d      	ldr	r2, [pc, #116]	; (80017a4 <RTOS_threadSwitchRunning+0x98>)
+ 800172e:	6013      	str	r3, [r2, #0]
+		/* my thought */
+		currentTopPriotiy = currentTopPriotiy % THREAD_PRIORITY_LEVELS;
+ 8001730:	4b1c      	ldr	r3, [pc, #112]	; (80017a4 <RTOS_threadSwitchRunning+0x98>)
+ 8001732:	681b      	ldr	r3, [r3, #0]
+ 8001734:	f003 030f 	and.w	r3, r3, #15
+ 8001738:	4a1a      	ldr	r2, [pc, #104]	; (80017a4 <RTOS_threadSwitchRunning+0x98>)
+ 800173a:	6013      	str	r3, [r2, #0]
+	while (readyList[currentTopPriotiy].numOfItems == 0) {
+ 800173c:	4b19      	ldr	r3, [pc, #100]	; (80017a4 <RTOS_threadSwitchRunning+0x98>)
+ 800173e:	681a      	ldr	r2, [r3, #0]
+ 8001740:	491a      	ldr	r1, [pc, #104]	; (80017ac <RTOS_threadSwitchRunning+0xa0>)
+ 8001742:	4613      	mov	r3, r2
+ 8001744:	009b      	lsls	r3, r3, #2
+ 8001746:	4413      	add	r3, r2
+ 8001748:	009b      	lsls	r3, r3, #2
+ 800174a:	440b      	add	r3, r1
+ 800174c:	681b      	ldr	r3, [r3, #0]
+ 800174e:	2b00      	cmp	r3, #0
+ 8001750:	d0e0      	beq.n	8001714 <RTOS_threadSwitchRunning+0x8>
+	}
+	/* Threads are found, update list index to the next thread */
+	/* so we can switch the CPU between the threads with same priority so each one will take 1 quantum */
+	RTOS_list_t *pReadyList = &readyList[currentTopPriotiy];
+ 8001752:	4b14      	ldr	r3, [pc, #80]	; (80017a4 <RTOS_threadSwitchRunning+0x98>)
+ 8001754:	681a      	ldr	r2, [r3, #0]
+ 8001756:	4613      	mov	r3, r2
+ 8001758:	009b      	lsls	r3, r3, #2
+ 800175a:	4413      	add	r3, r2
+ 800175c:	009b      	lsls	r3, r3, #2
+ 800175e:	4a13      	ldr	r2, [pc, #76]	; (80017ac <RTOS_threadSwitchRunning+0xa0>)
+ 8001760:	4413      	add	r3, r2
+ 8001762:	607b      	str	r3, [r7, #4]
+	pReadyList->pIndex = pReadyList->pIndex->pNext;
+ 8001764:	687b      	ldr	r3, [r7, #4]
+ 8001766:	685b      	ldr	r3, [r3, #4]
+ 8001768:	685a      	ldr	r2, [r3, #4]
+ 800176a:	687b      	ldr	r3, [r7, #4]
+ 800176c:	605a      	str	r2, [r3, #4]
+
+	/* Check if the new index pointing to the end of list  */
+	/* we made the casting and dereference because listEnd and List index are different data type */
+	if (pReadyList->pIndex == (RTOS_listItem_t*) &pReadyList->listEnd) {
+ 800176e:	687b      	ldr	r3, [r7, #4]
+ 8001770:	685a      	ldr	r2, [r3, #4]
+ 8001772:	687b      	ldr	r3, [r7, #4]
+ 8001774:	3308      	adds	r3, #8
+ 8001776:	429a      	cmp	r2, r3
+ 8001778:	d104      	bne.n	8001784 <RTOS_threadSwitchRunning+0x78>
+		/* Get the next thread */
+		pReadyList->pIndex = pReadyList->pIndex->pNext;
+ 800177a:	687b      	ldr	r3, [r7, #4]
+ 800177c:	685b      	ldr	r3, [r3, #4]
+ 800177e:	685a      	ldr	r2, [r3, #4]
+ 8001780:	687b      	ldr	r3, [r7, #4]
+ 8001782:	605a      	str	r2, [r3, #4]
+	} else {
+		/* Do nothing, index is not pointing to the end */
+	}
+
+	/* Update current running thread  */
+	pRunningThread = (RTOS_thread_t*) pReadyList->pIndex->pThread;
+ 8001784:	687b      	ldr	r3, [r7, #4]
+ 8001786:	685b      	ldr	r3, [r3, #4]
+ 8001788:	68db      	ldr	r3, [r3, #12]
+ 800178a:	4a09      	ldr	r2, [pc, #36]	; (80017b0 <RTOS_threadSwitchRunning+0xa4>)
+ 800178c:	6013      	str	r3, [r2, #0]
+
+	/*update the current running thread ID*/
+	runningThreadID = ((RTOS_thread_t*) pReadyList->pIndex->pThread)->threadID;
+ 800178e:	687b      	ldr	r3, [r7, #4]
+ 8001790:	685b      	ldr	r3, [r3, #4]
+ 8001792:	68db      	ldr	r3, [r3, #12]
+ 8001794:	689b      	ldr	r3, [r3, #8]
+ 8001796:	4a07      	ldr	r2, [pc, #28]	; (80017b4 <RTOS_threadSwitchRunning+0xa8>)
+ 8001798:	6013      	str	r3, [r2, #0]
+
+}
+ 800179a:	bf00      	nop
+ 800179c:	3708      	adds	r7, #8
+ 800179e:	46bd      	mov	sp, r7
+ 80017a0:	bd80      	pop	{r7, pc}
+ 80017a2:	bf00      	nop
+ 80017a4:	20000000 	.word	0x20000000
+ 80017a8:	08001bd4 	.word	0x08001bd4
+ 80017ac:	2000a228 	.word	0x2000a228
+ 80017b0:	2000a37c 	.word	0x2000a37c
+ 80017b4:	2000a380 	.word	0x2000a380
+
+080017b8 <RTOS_threadGetRunning>:
+ * @brief   Get running thread
+ * @note
+ * @param
+ * @retval  None
+ */
+RTOS_thread_t* RTOS_threadGetRunning(void) {
+ 80017b8:	b480      	push	{r7}
+ 80017ba:	af00      	add	r7, sp, #0
+	return pRunningThread;
+ 80017bc:	4b03      	ldr	r3, [pc, #12]	; (80017cc <RTOS_threadGetRunning+0x14>)
+ 80017be:	681b      	ldr	r3, [r3, #0]
+}
+ 80017c0:	4618      	mov	r0, r3
+ 80017c2:	46bd      	mov	sp, r7
+ 80017c4:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 80017c8:	4770      	bx	lr
+ 80017ca:	bf00      	nop
+ 80017cc:	2000a37c 	.word	0x2000a37c
+
+080017d0 <RTOS_threadAddRunningToTimerList>:
+ * @brief   Add thread to the timer list
+ * @note
+ * @param   None
+ * @retval  None
+ */
+void RTOS_threadAddRunningToTimerList(uint32_t waitTime) {
+ 80017d0:	b580      	push	{r7, lr}
+ 80017d2:	b084      	sub	sp, #16
+ 80017d4:	af00      	add	r7, sp, #0
+ 80017d6:	6078      	str	r0, [r7, #4]
+
+	/* Check the input parameter */
+	ASSERT_param(0 != waitTime);
+ 80017d8:	687b      	ldr	r3, [r7, #4]
+ 80017da:	2b00      	cmp	r3, #0
+ 80017dc:	d104      	bne.n	80017e8 <RTOS_threadAddRunningToTimerList+0x18>
+ 80017de:	f240 1149 	movw	r1, #329	; 0x149
+ 80017e2:	4817      	ldr	r0, [pc, #92]	; (8001840 <RTOS_threadAddRunningToTimerList+0x70>)
+ 80017e4:	f7ff f8a3 	bl	800092e <assert_failed>
+
+	/* Temp variable for the wake up tick */
+	uint32_t wakeUpTick = 0;
+ 80017e8:	2300      	movs	r3, #0
+ 80017ea:	60fb      	str	r3, [r7, #12]
+
+	/* Calculate wake up tick  */
+	wakeUpTick = sysTickCounter + waitTime;
+ 80017ec:	4b15      	ldr	r3, [pc, #84]	; (8001844 <RTOS_threadAddRunningToTimerList+0x74>)
+ 80017ee:	681b      	ldr	r3, [r3, #0]
+ 80017f0:	687a      	ldr	r2, [r7, #4]
+ 80017f2:	4413      	add	r3, r2
+ 80017f4:	60fb      	str	r3, [r7, #12]
+
+	/*Check counter overflow*/
+	ASSERT_param(wakeUpTick > sysTickCounter);
+ 80017f6:	4b13      	ldr	r3, [pc, #76]	; (8001844 <RTOS_threadAddRunningToTimerList+0x74>)
+ 80017f8:	681b      	ldr	r3, [r3, #0]
+ 80017fa:	68fa      	ldr	r2, [r7, #12]
+ 80017fc:	429a      	cmp	r2, r3
+ 80017fe:	d804      	bhi.n	800180a <RTOS_threadAddRunningToTimerList+0x3a>
+ 8001800:	f44f 71a9 	mov.w	r1, #338	; 0x152
+ 8001804:	480e      	ldr	r0, [pc, #56]	; (8001840 <RTOS_threadAddRunningToTimerList+0x70>)
+ 8001806:	f7ff f892 	bl	800092e <assert_failed>
+
+	/* Set generic list item value */
+	pRunningThread->genericListItem.itemValue = wakeUpTick;
+ 800180a:	4b0f      	ldr	r3, [pc, #60]	; (8001848 <RTOS_threadAddRunningToTimerList+0x78>)
+ 800180c:	681b      	ldr	r3, [r3, #0]
+ 800180e:	68fa      	ldr	r2, [r7, #12]
+ 8001810:	621a      	str	r2, [r3, #32]
+
+	/* Remove from ready list */
+	RTOS_listRemove(&pRunningThread->genericListItem);
+ 8001812:	4b0d      	ldr	r3, [pc, #52]	; (8001848 <RTOS_threadAddRunningToTimerList+0x78>)
+ 8001814:	681b      	ldr	r3, [r3, #0]
+ 8001816:	3320      	adds	r3, #32
+ 8001818:	4618      	mov	r0, r3
+ 800181a:	f7ff fb0d 	bl	8000e38 <RTOS_listRemove>
+
+	/* Add to timer list */
+	RTOS_listInsert(&timerList, &pRunningThread->genericListItem);
+ 800181e:	4b0a      	ldr	r3, [pc, #40]	; (8001848 <RTOS_threadAddRunningToTimerList+0x78>)
+ 8001820:	681b      	ldr	r3, [r3, #0]
+ 8001822:	3320      	adds	r3, #32
+ 8001824:	4619      	mov	r1, r3
+ 8001826:	4809      	ldr	r0, [pc, #36]	; (800184c <RTOS_threadAddRunningToTimerList+0x7c>)
+ 8001828:	f7ff fb2e 	bl	8000e88 <RTOS_listInsert>
+
+	/* Trigger context switch, set PendSV to pending */
+	SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
+ 800182c:	4b08      	ldr	r3, [pc, #32]	; (8001850 <RTOS_threadAddRunningToTimerList+0x80>)
+ 800182e:	685b      	ldr	r3, [r3, #4]
+ 8001830:	4a07      	ldr	r2, [pc, #28]	; (8001850 <RTOS_threadAddRunningToTimerList+0x80>)
+ 8001832:	f043 5380 	orr.w	r3, r3, #268435456	; 0x10000000
+ 8001836:	6053      	str	r3, [r2, #4]
+}
+ 8001838:	bf00      	nop
+ 800183a:	3710      	adds	r7, #16
+ 800183c:	46bd      	mov	sp, r7
+ 800183e:	bd80      	pop	{r7, pc}
+ 8001840:	08001bd4 	.word	0x08001bd4
+ 8001844:	2000a388 	.word	0x2000a388
+ 8001848:	2000a37c 	.word	0x2000a37c
+ 800184c:	2000a368 	.word	0x2000a368
+ 8001850:	e000ed00 	.word	0xe000ed00
+
+08001854 <RTOS_threadRefreshTimerList>:
+ * @brief   Refresh the timer list
+ * @note
+ * @param   None
+ * @retval  None
+ */
+void RTOS_threadRefreshTimerList(void) {
+ 8001854:	b580      	push	{r7, lr}
+ 8001856:	b082      	sub	sp, #8
+ 8001858:	af00      	add	r7, sp, #0
+	/* Pointer to the unblocked thread */
+	RTOS_thread_t *pThread;
+
+	/* Check scheduler status */
+	if (1 == RTOS_isSchedulerRunning()) {
+ 800185a:	f7ff fa83 	bl	8000d64 <RTOS_isSchedulerRunning>
+ 800185e:	4603      	mov	r3, r0
+ 8001860:	2b01      	cmp	r3, #1
+ 8001862:	d136      	bne.n	80018d2 <RTOS_threadRefreshTimerList+0x7e>
+
+		/* Increment SysTick counter */
+		++sysTickCounter;
+ 8001864:	4b1d      	ldr	r3, [pc, #116]	; (80018dc <RTOS_threadRefreshTimerList+0x88>)
+ 8001866:	681b      	ldr	r3, [r3, #0]
+ 8001868:	3301      	adds	r3, #1
+ 800186a:	4a1c      	ldr	r2, [pc, #112]	; (80018dc <RTOS_threadRefreshTimerList+0x88>)
+ 800186c:	6013      	str	r3, [r2, #0]
+
+		/* Check SysTick counter overflow */
+		/* it shouldn't overflow to overflow it should stay on for 30 or 40 days */
+		if (0 == sysTickCounter) {
+ 800186e:	4b1b      	ldr	r3, [pc, #108]	; (80018dc <RTOS_threadRefreshTimerList+0x88>)
+ 8001870:	681b      	ldr	r3, [r3, #0]
+ 8001872:	2b00      	cmp	r3, #0
+ 8001874:	d104      	bne.n	8001880 <RTOS_threadRefreshTimerList+0x2c>
+			/* TODO: Handle counter overflow */
+			ASSERT_param(0);
+ 8001876:	f240 1175 	movw	r1, #373	; 0x175
+ 800187a:	4819      	ldr	r0, [pc, #100]	; (80018e0 <RTOS_threadRefreshTimerList+0x8c>)
+ 800187c:	f7ff f857 	bl	800092e <assert_failed>
+		} else {
+			/* No counter overflow, do nothing */
+		}
+
+		/* Check if timer list has threads waiting */
+		if (0 < timerList.numOfItems) {
+ 8001880:	4b18      	ldr	r3, [pc, #96]	; (80018e4 <RTOS_threadRefreshTimerList+0x90>)
+ 8001882:	681b      	ldr	r3, [r3, #0]
+ 8001884:	2b00      	cmp	r3, #0
+ 8001886:	d024      	beq.n	80018d2 <RTOS_threadRefreshTimerList+0x7e>
+			/* Timer list is not empty, check timeout values */
+			while (sysTickCounter >= timerList.listEnd.pNext->itemValue) {
+ 8001888:	e01c      	b.n	80018c4 <RTOS_threadRefreshTimerList+0x70>
+				/* Get first thread waiting */
+				pThread = timerList.listEnd.pNext->pThread;
+ 800188a:	4b16      	ldr	r3, [pc, #88]	; (80018e4 <RTOS_threadRefreshTimerList+0x90>)
+ 800188c:	68db      	ldr	r3, [r3, #12]
+ 800188e:	68db      	ldr	r3, [r3, #12]
+ 8001890:	607b      	str	r3, [r7, #4]
+
+				/* Check returned thread */
+				ASSERT_param(NULL != pThread);
+ 8001892:	687b      	ldr	r3, [r7, #4]
+ 8001894:	2b00      	cmp	r3, #0
+ 8001896:	d104      	bne.n	80018a2 <RTOS_threadRefreshTimerList+0x4e>
+ 8001898:	f44f 71c1 	mov.w	r1, #386	; 0x182
+ 800189c:	4810      	ldr	r0, [pc, #64]	; (80018e0 <RTOS_threadRefreshTimerList+0x8c>)
+ 800189e:	f7ff f846 	bl	800092e <assert_failed>
+
+				/* Thread timeout, remove from timer list */
+				RTOS_listRemove(&pThread->genericListItem);
+ 80018a2:	687b      	ldr	r3, [r7, #4]
+ 80018a4:	3320      	adds	r3, #32
+ 80018a6:	4618      	mov	r0, r3
+ 80018a8:	f7ff fac6 	bl	8000e38 <RTOS_listRemove>
+
+				/* Check if the thread waiting for synchronization event */
+				if (NULL != pThread->eventListItem.pList) {
+ 80018ac:	687b      	ldr	r3, [r7, #4]
+ 80018ae:	6c5b      	ldr	r3, [r3, #68]	; 0x44
+ 80018b0:	2b00      	cmp	r3, #0
+ 80018b2:	d004      	beq.n	80018be <RTOS_threadRefreshTimerList+0x6a>
+					/* Remove the thread from the event list */
+					RTOS_listRemove(&pThread->eventListItem);
+ 80018b4:	687b      	ldr	r3, [r7, #4]
+ 80018b6:	3334      	adds	r3, #52	; 0x34
+ 80018b8:	4618      	mov	r0, r3
+ 80018ba:	f7ff fabd 	bl	8000e38 <RTOS_listRemove>
+				} else {
+					/* Do nothing, this thread is not in any event lists */
+				}
+
+				/* Add the returned thread into ready list */
+				RTOS_threadAddToReadyList(pThread);
+ 80018be:	6878      	ldr	r0, [r7, #4]
+ 80018c0:	f7ff fee2 	bl	8001688 <RTOS_threadAddToReadyList>
+			while (sysTickCounter >= timerList.listEnd.pNext->itemValue) {
+ 80018c4:	4b07      	ldr	r3, [pc, #28]	; (80018e4 <RTOS_threadRefreshTimerList+0x90>)
+ 80018c6:	68db      	ldr	r3, [r3, #12]
+ 80018c8:	681a      	ldr	r2, [r3, #0]
+ 80018ca:	4b04      	ldr	r3, [pc, #16]	; (80018dc <RTOS_threadRefreshTimerList+0x88>)
+ 80018cc:	681b      	ldr	r3, [r3, #0]
+ 80018ce:	429a      	cmp	r2, r3
+ 80018d0:	d9db      	bls.n	800188a <RTOS_threadRefreshTimerList+0x36>
+		}
+	} else {
+		/* Scheduler is not running, do nothing */
+	}
+
+}
+ 80018d2:	bf00      	nop
+ 80018d4:	3708      	adds	r7, #8
+ 80018d6:	46bd      	mov	sp, r7
+ 80018d8:	bd80      	pop	{r7, pc}
+ 80018da:	bf00      	nop
+ 80018dc:	2000a388 	.word	0x2000a388
+ 80018e0:	08001bd4 	.word	0x08001bd4
+ 80018e4:	2000a368 	.word	0x2000a368
+
+080018e8 <RTOS_threadDestroy>:
+
+void RTOS_threadDestroy(RTOS_thread_t *pThread) {
+ 80018e8:	b580      	push	{r7, lr}
+ 80018ea:	b082      	sub	sp, #8
+ 80018ec:	af00      	add	r7, sp, #0
+ 80018ee:	6078      	str	r0, [r7, #4]
+	/* Check input parameters */
+	ASSERT_param(NULL != pThread);
+ 80018f0:	687b      	ldr	r3, [r7, #4]
+ 80018f2:	2b00      	cmp	r3, #0
+ 80018f4:	d104      	bne.n	8001900 <RTOS_threadDestroy+0x18>
+ 80018f6:	f240 11a1 	movw	r1, #417	; 0x1a1
+ 80018fa:	4812      	ldr	r0, [pc, #72]	; (8001944 <RTOS_threadDestroy+0x5c>)
+ 80018fc:	f7ff f817 	bl	800092e <assert_failed>
+
+	/* Check if the generic list item in any list */
+	if (NULL != pThread->genericListItem.pList) {
+ 8001900:	687b      	ldr	r3, [r7, #4]
+ 8001902:	6b1b      	ldr	r3, [r3, #48]	; 0x30
+ 8001904:	2b00      	cmp	r3, #0
+ 8001906:	d004      	beq.n	8001912 <RTOS_threadDestroy+0x2a>
+		/* Remove the generic list item from the current list */
+		RTOS_listRemove(&pThread->genericListItem);
+ 8001908:	687b      	ldr	r3, [r7, #4]
+ 800190a:	3320      	adds	r3, #32
+ 800190c:	4618      	mov	r0, r3
+ 800190e:	f7ff fa93 	bl	8000e38 <RTOS_listRemove>
+	} else {
+		/* Do nothing, generic list item is not in any list */
+	}
+
+	/* Check if the event list item in any list */
+	if (NULL != pThread->eventListItem.pList) {
+ 8001912:	687b      	ldr	r3, [r7, #4]
+ 8001914:	6c5b      	ldr	r3, [r3, #68]	; 0x44
+ 8001916:	2b00      	cmp	r3, #0
+ 8001918:	d004      	beq.n	8001924 <RTOS_threadDestroy+0x3c>
+		/* Remove the event list item from the current list */
+		RTOS_listRemove(&pThread->eventListItem);
+ 800191a:	687b      	ldr	r3, [r7, #4]
+ 800191c:	3334      	adds	r3, #52	; 0x34
+ 800191e:	4618      	mov	r0, r3
+ 8001920:	f7ff fa8a 	bl	8000e38 <RTOS_listRemove>
+	} else {
+		/* Do nothing, event list item is not in any list */
+	}
+
+	/* Check if the removed thread is the current thread */
+	if (pThread == pRunningThread) {
+ 8001924:	4b08      	ldr	r3, [pc, #32]	; (8001948 <RTOS_threadDestroy+0x60>)
+ 8001926:	681b      	ldr	r3, [r3, #0]
+ 8001928:	687a      	ldr	r2, [r7, #4]
+ 800192a:	429a      	cmp	r2, r3
+ 800192c:	d105      	bne.n	800193a <RTOS_threadDestroy+0x52>
+		/* The current thread will be removed, request context switch  */
+		SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
+ 800192e:	4b07      	ldr	r3, [pc, #28]	; (800194c <RTOS_threadDestroy+0x64>)
+ 8001930:	685b      	ldr	r3, [r3, #4]
+ 8001932:	4a06      	ldr	r2, [pc, #24]	; (800194c <RTOS_threadDestroy+0x64>)
+ 8001934:	f043 5380 	orr.w	r3, r3, #268435456	; 0x10000000
+ 8001938:	6053      	str	r3, [r2, #4]
+	} else {
+		/* Do nothing */
+	}
+}
+ 800193a:	bf00      	nop
+ 800193c:	3708      	adds	r7, #8
+ 800193e:	46bd      	mov	sp, r7
+ 8001940:	bd80      	pop	{r7, pc}
+ 8001942:	bf00      	nop
+ 8001944:	08001bd4 	.word	0x08001bd4
+ 8001948:	2000a37c 	.word	0x2000a37c
+ 800194c:	e000ed00 	.word	0xe000ed00
+
+08001950 <RTOS_threadPriorityInherit>:
+ * @note    Gives the passed thread the priority of the current thread
+ * @param   RTOS_thread_t *
+ * @retval  None
+ */
+#if (1 == USE_PRIORITY_INHERITANCE)
+void RTOS_threadPriorityInherit(RTOS_thread_t *pThread) {
+ 8001950:	b580      	push	{r7, lr}
+ 8001952:	b082      	sub	sp, #8
+ 8001954:	af00      	add	r7, sp, #0
+ 8001956:	6078      	str	r0, [r7, #4]
+	/* Check input parameters */
+	ASSERT_param(NULL != pThread);
+ 8001958:	687b      	ldr	r3, [r7, #4]
+ 800195a:	2b00      	cmp	r3, #0
+ 800195c:	d104      	bne.n	8001968 <RTOS_threadPriorityInherit+0x18>
+ 800195e:	f240 11c5 	movw	r1, #453	; 0x1c5
+ 8001962:	4819      	ldr	r0, [pc, #100]	; (80019c8 <RTOS_threadPriorityInherit+0x78>)
+ 8001964:	f7fe ffe3 	bl	800092e <assert_failed>
+
+	/* Check if the passed thread has higher priority that the running thread */
+	if (pThread->priority > pRunningThread->priority) {
+ 8001968:	687b      	ldr	r3, [r7, #4]
+ 800196a:	685a      	ldr	r2, [r3, #4]
+ 800196c:	4b17      	ldr	r3, [pc, #92]	; (80019cc <RTOS_threadPriorityInherit+0x7c>)
+ 800196e:	681b      	ldr	r3, [r3, #0]
+ 8001970:	685b      	ldr	r3, [r3, #4]
+ 8001972:	429a      	cmp	r2, r3
+ 8001974:	d923      	bls.n	80019be <RTOS_threadPriorityInherit+0x6e>
+
+		/* Passed thread has priority lower than the current thread,
+		 * do priority inheritance */
+		/* Update event list item value */
+		/* in case he is in waiting for another mutex */
+		pThread->eventListItem.itemValue = pRunningThread->priority;
+ 8001976:	4b15      	ldr	r3, [pc, #84]	; (80019cc <RTOS_threadPriorityInherit+0x7c>)
+ 8001978:	681b      	ldr	r3, [r3, #0]
+ 800197a:	685a      	ldr	r2, [r3, #4]
+ 800197c:	687b      	ldr	r3, [r7, #4]
+ 800197e:	635a      	str	r2, [r3, #52]	; 0x34
+
+		/* Check if the passed thread in the ready list,
+		 * it will be removed and added again */
+		if ((void*) &readyList[pThread->priority]
+ 8001980:	687b      	ldr	r3, [r7, #4]
+ 8001982:	685a      	ldr	r2, [r3, #4]
+ 8001984:	4613      	mov	r3, r2
+ 8001986:	009b      	lsls	r3, r3, #2
+ 8001988:	4413      	add	r3, r2
+ 800198a:	009b      	lsls	r3, r3, #2
+ 800198c:	4a10      	ldr	r2, [pc, #64]	; (80019d0 <RTOS_threadPriorityInherit+0x80>)
+ 800198e:	441a      	add	r2, r3
+				== pThread->genericListItem.pList) {
+ 8001990:	687b      	ldr	r3, [r7, #4]
+ 8001992:	6b1b      	ldr	r3, [r3, #48]	; 0x30
+		if ((void*) &readyList[pThread->priority]
+ 8001994:	429a      	cmp	r2, r3
+ 8001996:	d10d      	bne.n	80019b4 <RTOS_threadPriorityInherit+0x64>
+
+			/* Remove from the ready list */
+			RTOS_listRemove(&pThread->genericListItem);
+ 8001998:	687b      	ldr	r3, [r7, #4]
+ 800199a:	3320      	adds	r3, #32
+ 800199c:	4618      	mov	r0, r3
+ 800199e:	f7ff fa4b 	bl	8000e38 <RTOS_listRemove>
+
+			/* Update thread priority */
+			pThread->priority = pRunningThread->priority;
+ 80019a2:	4b0a      	ldr	r3, [pc, #40]	; (80019cc <RTOS_threadPriorityInherit+0x7c>)
+ 80019a4:	681b      	ldr	r3, [r3, #0]
+ 80019a6:	685a      	ldr	r2, [r3, #4]
+ 80019a8:	687b      	ldr	r3, [r7, #4]
+ 80019aa:	605a      	str	r2, [r3, #4]
+
+			/* Added to the ready list */
+			RTOS_threadAddToReadyList(pThread);
+ 80019ac:	6878      	ldr	r0, [r7, #4]
+ 80019ae:	f7ff fe6b 	bl	8001688 <RTOS_threadAddToReadyList>
+	} else {
+		/* Do nothing, passed thread has priority higher than or equal to
+		 * the current thread */
+	}
+
+}
+ 80019b2:	e004      	b.n	80019be <RTOS_threadPriorityInherit+0x6e>
+			pThread->priority = pRunningThread->priority;
+ 80019b4:	4b05      	ldr	r3, [pc, #20]	; (80019cc <RTOS_threadPriorityInherit+0x7c>)
+ 80019b6:	681b      	ldr	r3, [r3, #0]
+ 80019b8:	685a      	ldr	r2, [r3, #4]
+ 80019ba:	687b      	ldr	r3, [r7, #4]
+ 80019bc:	605a      	str	r2, [r3, #4]
+}
+ 80019be:	bf00      	nop
+ 80019c0:	3708      	adds	r7, #8
+ 80019c2:	46bd      	mov	sp, r7
+ 80019c4:	bd80      	pop	{r7, pc}
+ 80019c6:	bf00      	nop
+ 80019c8:	08001bd4 	.word	0x08001bd4
+ 80019cc:	2000a37c 	.word	0x2000a37c
+ 80019d0:	2000a228 	.word	0x2000a228
+
+080019d4 <RTOS_threadPriorityDisinherit>:
+ * @note    Restores the original priority of the current thread
+ * @param   None
+ * @retval  None
+ */
+#if (1 == USE_PRIORITY_INHERITANCE)
+void RTOS_threadPriorityDisinherit(void) {
+ 80019d4:	b580      	push	{r7, lr}
+ 80019d6:	af00      	add	r7, sp, #0
+	/* Check current priority */
+	if (pRunningThread->priority != pRunningThread->originalPriority) {
+ 80019d8:	4b10      	ldr	r3, [pc, #64]	; (8001a1c <RTOS_threadPriorityDisinherit+0x48>)
+ 80019da:	681b      	ldr	r3, [r3, #0]
+ 80019dc:	685a      	ldr	r2, [r3, #4]
+ 80019de:	4b0f      	ldr	r3, [pc, #60]	; (8001a1c <RTOS_threadPriorityDisinherit+0x48>)
+ 80019e0:	681b      	ldr	r3, [r3, #0]
+ 80019e2:	6c9b      	ldr	r3, [r3, #72]	; 0x48
+ 80019e4:	429a      	cmp	r2, r3
+ 80019e6:	d016      	beq.n	8001a16 <RTOS_threadPriorityDisinherit+0x42>
+
+		/* Remove from the ready list */
+		RTOS_listRemove(&pRunningThread->genericListItem);
+ 80019e8:	4b0c      	ldr	r3, [pc, #48]	; (8001a1c <RTOS_threadPriorityDisinherit+0x48>)
+ 80019ea:	681b      	ldr	r3, [r3, #0]
+ 80019ec:	3320      	adds	r3, #32
+ 80019ee:	4618      	mov	r0, r3
+ 80019f0:	f7ff fa22 	bl	8000e38 <RTOS_listRemove>
+
+		/* Update thread priority */
+		pRunningThread->priority = pRunningThread->originalPriority;
+ 80019f4:	4b09      	ldr	r3, [pc, #36]	; (8001a1c <RTOS_threadPriorityDisinherit+0x48>)
+ 80019f6:	681a      	ldr	r2, [r3, #0]
+ 80019f8:	4b08      	ldr	r3, [pc, #32]	; (8001a1c <RTOS_threadPriorityDisinherit+0x48>)
+ 80019fa:	681b      	ldr	r3, [r3, #0]
+ 80019fc:	6c92      	ldr	r2, [r2, #72]	; 0x48
+ 80019fe:	605a      	str	r2, [r3, #4]
+
+		/* Update event list item value */
+		pRunningThread->eventListItem.itemValue =
+				pRunningThread->originalPriority;
+ 8001a00:	4b06      	ldr	r3, [pc, #24]	; (8001a1c <RTOS_threadPriorityDisinherit+0x48>)
+ 8001a02:	681a      	ldr	r2, [r3, #0]
+		pRunningThread->eventListItem.itemValue =
+ 8001a04:	4b05      	ldr	r3, [pc, #20]	; (8001a1c <RTOS_threadPriorityDisinherit+0x48>)
+ 8001a06:	681b      	ldr	r3, [r3, #0]
+				pRunningThread->originalPriority;
+ 8001a08:	6c92      	ldr	r2, [r2, #72]	; 0x48
+		pRunningThread->eventListItem.itemValue =
+ 8001a0a:	635a      	str	r2, [r3, #52]	; 0x34
+
+		/* Added to the ready list */
+		RTOS_threadAddToReadyList(pRunningThread);
+ 8001a0c:	4b03      	ldr	r3, [pc, #12]	; (8001a1c <RTOS_threadPriorityDisinherit+0x48>)
+ 8001a0e:	681b      	ldr	r3, [r3, #0]
+ 8001a10:	4618      	mov	r0, r3
+ 8001a12:	f7ff fe39 	bl	8001688 <RTOS_threadAddToReadyList>
+	} else {
+		/* Do nothing */
+	}
+}
+ 8001a16:	bf00      	nop
+ 8001a18:	bd80      	pop	{r7, pc}
+ 8001a1a:	bf00      	nop
+ 8001a1c:	2000a37c 	.word	0x2000a37c
+
+08001a20 <RTOS_threadPrioritySet>:
+ * @note    Used for priority ceiling
+ * @param   None
+ * @retval  None
+ */
+#if (1 == USE_PRIORITY_SET)
+void RTOS_threadPrioritySet(uint32_t newPriority) {
+ 8001a20:	b580      	push	{r7, lr}
+ 8001a22:	b084      	sub	sp, #16
+ 8001a24:	af00      	add	r7, sp, #0
+ 8001a26:	6078      	str	r0, [r7, #4]
+
+	/* Check input parameters */
+	ASSERT_param(THREAD_PRIORITY_LEVELS > newPriority);
+ 8001a28:	687b      	ldr	r3, [r7, #4]
+ 8001a2a:	2b0f      	cmp	r3, #15
+ 8001a2c:	d904      	bls.n	8001a38 <RTOS_threadPrioritySet+0x18>
+ 8001a2e:	f44f 7104 	mov.w	r1, #528	; 0x210
+ 8001a32:	4814      	ldr	r0, [pc, #80]	; (8001a84 <RTOS_threadPrioritySet+0x64>)
+ 8001a34:	f7fe ff7b 	bl	800092e <assert_failed>
+	uint32_t runningThreadPriority;
+
+	/* Read priority */
+#if (1 == USE_PRIORITY_INHERITANCE)
+	{
+		runningThreadPriority = pRunningThread->originalPriority;
+ 8001a38:	4b13      	ldr	r3, [pc, #76]	; (8001a88 <RTOS_threadPrioritySet+0x68>)
+ 8001a3a:	681b      	ldr	r3, [r3, #0]
+ 8001a3c:	6c9b      	ldr	r3, [r3, #72]	; 0x48
+ 8001a3e:	60fb      	str	r3, [r7, #12]
+	  /* Change the priority */
+#if (1==USE_PRIORITY_INHERITANCE )
+	  {
+		  /* check if the thread inherted the priority */
+	      /* No information if the thread inherited the priority */
+	      if(pRunningThread->originalPriority == pRunningThread->priority)
+ 8001a40:	4b11      	ldr	r3, [pc, #68]	; (8001a88 <RTOS_threadPrioritySet+0x68>)
+ 8001a42:	681b      	ldr	r3, [r3, #0]
+ 8001a44:	6c9a      	ldr	r2, [r3, #72]	; 0x48
+ 8001a46:	4b10      	ldr	r3, [pc, #64]	; (8001a88 <RTOS_threadPrioritySet+0x68>)
+ 8001a48:	681b      	ldr	r3, [r3, #0]
+ 8001a4a:	685b      	ldr	r3, [r3, #4]
+ 8001a4c:	429a      	cmp	r2, r3
+ 8001a4e:	d103      	bne.n	8001a58 <RTOS_threadPrioritySet+0x38>
+	      {
+	        /* No inheritance */
+	        pRunningThread->priority = newPriority;
+ 8001a50:	4b0d      	ldr	r3, [pc, #52]	; (8001a88 <RTOS_threadPrioritySet+0x68>)
+ 8001a52:	681b      	ldr	r3, [r3, #0]
+ 8001a54:	687a      	ldr	r2, [r7, #4]
+ 8001a56:	605a      	str	r2, [r3, #4]
+	      {
+	        /* Do nothing */
+	      }
+
+	      /* Change the original priority */
+	      pRunningThread->originalPriority = newPriority;
+ 8001a58:	4b0b      	ldr	r3, [pc, #44]	; (8001a88 <RTOS_threadPrioritySet+0x68>)
+ 8001a5a:	681b      	ldr	r3, [r3, #0]
+ 8001a5c:	687a      	ldr	r2, [r7, #4]
+ 8001a5e:	649a      	str	r2, [r3, #72]	; 0x48
+		  /* No priority inheritance */
+		  pRunningThread->priority = newPriority;
+	  }
+#endif
+	/* Compare new priority with the current priority */
+	if (newPriority != runningThreadPriority) {
+ 8001a60:	687a      	ldr	r2, [r7, #4]
+ 8001a62:	68fb      	ldr	r3, [r7, #12]
+ 8001a64:	429a      	cmp	r2, r3
+ 8001a66:	d009      	beq.n	8001a7c <RTOS_threadPrioritySet+0x5c>
+
+		/* The new priority is lower priority means another thread should work */
+		if (newPriority > runningThreadPriority) {
+ 8001a68:	687a      	ldr	r2, [r7, #4]
+ 8001a6a:	68fb      	ldr	r3, [r7, #12]
+ 8001a6c:	429a      	cmp	r2, r3
+ 8001a6e:	d905      	bls.n	8001a7c <RTOS_threadPrioritySet+0x5c>
+
+			/* Can make other thread able to run, trigger context switch,
+			 * set PendSV to pending */
+			SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
+ 8001a70:	4b06      	ldr	r3, [pc, #24]	; (8001a8c <RTOS_threadPrioritySet+0x6c>)
+ 8001a72:	685b      	ldr	r3, [r3, #4]
+ 8001a74:	4a05      	ldr	r2, [pc, #20]	; (8001a8c <RTOS_threadPrioritySet+0x6c>)
+ 8001a76:	f043 5380 	orr.w	r3, r3, #268435456	; 0x10000000
+ 8001a7a:	6053      	str	r3, [r2, #4]
+
+	} else {
+		/* Do nothing, it has the same priority */
+	}
+
+}
+ 8001a7c:	bf00      	nop
+ 8001a7e:	3710      	adds	r7, #16
+ 8001a80:	46bd      	mov	sp, r7
+ 8001a82:	bd80      	pop	{r7, pc}
+ 8001a84:	08001bd4 	.word	0x08001bd4
+ 8001a88:	2000a37c 	.word	0x2000a37c
+ 8001a8c:	e000ed00 	.word	0xe000ed00
+
+08001a90 <__libc_init_array>:
+ 8001a90:	b570      	push	{r4, r5, r6, lr}
+ 8001a92:	4d0d      	ldr	r5, [pc, #52]	; (8001ac8 <__libc_init_array+0x38>)
+ 8001a94:	4c0d      	ldr	r4, [pc, #52]	; (8001acc <__libc_init_array+0x3c>)
+ 8001a96:	1b64      	subs	r4, r4, r5
+ 8001a98:	10a4      	asrs	r4, r4, #2
+ 8001a9a:	2600      	movs	r6, #0
+ 8001a9c:	42a6      	cmp	r6, r4
+ 8001a9e:	d109      	bne.n	8001ab4 <__libc_init_array+0x24>
+ 8001aa0:	4d0b      	ldr	r5, [pc, #44]	; (8001ad0 <__libc_init_array+0x40>)
+ 8001aa2:	4c0c      	ldr	r4, [pc, #48]	; (8001ad4 <__libc_init_array+0x44>)
+ 8001aa4:	f000 f826 	bl	8001af4 <_init>
+ 8001aa8:	1b64      	subs	r4, r4, r5
+ 8001aaa:	10a4      	asrs	r4, r4, #2
+ 8001aac:	2600      	movs	r6, #0
+ 8001aae:	42a6      	cmp	r6, r4
+ 8001ab0:	d105      	bne.n	8001abe <__libc_init_array+0x2e>
+ 8001ab2:	bd70      	pop	{r4, r5, r6, pc}
+ 8001ab4:	f855 3b04 	ldr.w	r3, [r5], #4
+ 8001ab8:	4798      	blx	r3
+ 8001aba:	3601      	adds	r6, #1
+ 8001abc:	e7ee      	b.n	8001a9c <__libc_init_array+0xc>
+ 8001abe:	f855 3b04 	ldr.w	r3, [r5], #4
+ 8001ac2:	4798      	blx	r3
+ 8001ac4:	3601      	adds	r6, #1
+ 8001ac6:	e7f2      	b.n	8001aae <__libc_init_array+0x1e>
+ 8001ac8:	08001bf8 	.word	0x08001bf8
+ 8001acc:	08001bf8 	.word	0x08001bf8
+ 8001ad0:	08001bf8 	.word	0x08001bf8
+ 8001ad4:	08001bfc 	.word	0x08001bfc
+
+08001ad8 <memcpy>:
+ 8001ad8:	440a      	add	r2, r1
+ 8001ada:	4291      	cmp	r1, r2
+ 8001adc:	f100 33ff 	add.w	r3, r0, #4294967295
+ 8001ae0:	d100      	bne.n	8001ae4 <memcpy+0xc>
+ 8001ae2:	4770      	bx	lr
+ 8001ae4:	b510      	push	{r4, lr}
+ 8001ae6:	f811 4b01 	ldrb.w	r4, [r1], #1
+ 8001aea:	f803 4f01 	strb.w	r4, [r3, #1]!
+ 8001aee:	4291      	cmp	r1, r2
+ 8001af0:	d1f9      	bne.n	8001ae6 <memcpy+0xe>
+ 8001af2:	bd10      	pop	{r4, pc}
+
+08001af4 <_init>:
+ 8001af4:	b5f8      	push	{r3, r4, r5, r6, r7, lr}
+ 8001af6:	bf00      	nop
+ 8001af8:	bcf8      	pop	{r3, r4, r5, r6, r7}
+ 8001afa:	bc08      	pop	{r3}
+ 8001afc:	469e      	mov	lr, r3
+ 8001afe:	4770      	bx	lr
+
+08001b00 <_fini>:
+ 8001b00:	b5f8      	push	{r3, r4, r5, r6, r7, lr}
+ 8001b02:	bf00      	nop
+ 8001b04:	bcf8      	pop	{r3, r4, r5, r6, r7}
+ 8001b06:	bc08      	pop	{r3}
+ 8001b08:	469e      	mov	lr, r3
+ 8001b0a:	4770      	bx	lr

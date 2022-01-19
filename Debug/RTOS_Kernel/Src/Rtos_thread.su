@@ -1,0 +1,13 @@
+Rtos_thread.c:131:6:RTOS_threadInitLists	16	static
+Rtos_thread.c:144:6:RTOS_threadCreate	24	static
+Rtos_thread.c:225:6:RTOS_threadGetCuurentReady	4	static
+Rtos_thread.c:235:6:RTOS_threadSwitchContext	4	static
+Rtos_thread.c:245:6:RTOS_threadAddToReadyList	16	static
+Rtos_thread.c:280:6:RTOS_threadSwitchRunning	16	static
+Rtos_thread.c:316:16:RTOS_threadGetRunning	4	static
+Rtos_thread.c:326:6:RTOS_threadAddRunningToTimerList	24	static
+Rtos_thread.c:359:6:RTOS_threadRefreshTimerList	16	static
+Rtos_thread.c:415:6:RTOS_threadDestroy	16	static
+Rtos_thread.c:451:6:RTOS_threadPriorityInherit	16	static
+Rtos_thread.c:496:6:RTOS_threadPriorityDisinherit	8	static
+Rtos_thread.c:525:6:RTOS_threadPrioritySet	24	static

@@ -1,0 +1,3 @@
+Rtos_semaphore.c:99:6:RTOS_semaphoreCreate	16	static
+Rtos_semaphore.c:117:15:RTOS_semaphoreTake	56	static,ignoring_inline_asm
+Rtos_semaphore.c:223:6:RTOS_semaphoreGive	48	static,ignoring_inline_asm
